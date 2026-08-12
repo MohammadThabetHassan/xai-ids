@@ -1,6 +1,6 @@
 {
   "project": "XAI-IDS: Explainable AI Intrusion Detection",
-  "repo": "MohammadThabetHassan/xai-ids-cicids2017",
+  "repo": "MohammadThabetHassan/xai-ids",
   "xai_methods": [
     "SHAP TreeExplainer",
     "LIME TabularExplainer"

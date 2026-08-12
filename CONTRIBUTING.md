@@ -6,7 +6,7 @@ Thank you for your interest in contributing to the XAI-IDS project! This documen
 
 ### Reporting Bugs
 
-- Check existing [issues](https://github.com/MohammadThabetHassan/xai-ids-cicids2017/issues) first
+- Check existing [issues](https://github.com/MohammadThabetHassan/xai-ids/issues) first
 - Use the [bug report template](.github/ISSUE_TEMPLATE/bug_report.md)
 - Include: Python version, OS, steps to reproduce, expected vs actual behavior
 
@@ -28,8 +28,8 @@ Thank you for your interest in contributing to the XAI-IDS project! This documen
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/xai-ids-cicids2017.git
-cd xai-ids-cicids2017
+git clone https://github.com/YOUR_USERNAME/xai-ids.git
+cd xai-ids
 
 # Install dependencies
 pip install -r requirements.txt

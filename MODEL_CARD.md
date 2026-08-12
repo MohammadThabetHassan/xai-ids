@@ -10,7 +10,7 @@
 - **Authors**: Mohammad Thabet Hassan, Fahad Sadek, Ahmed Sami
 - **Supervisor**: Dr. Mehak Khurana
 - **License**: MIT
-- **Repository**: [github.com/MohammadThabetHassan/xai-ids-cicids2017](https://github.com/MohammadThabetHassan/xai-ids-cicids2017)
+- **Repository**: [github.com/MohammadThabetHassan/xai-ids](https://github.com/MohammadThabetHassan/xai-ids)
 
 ## Intended Use
 

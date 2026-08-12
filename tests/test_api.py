@@ -64,6 +64,7 @@ class TestInputValidation:
 
     def test_rejects_non_finite_features(self):
         from pydantic import ValidationError
+
         from api.app import PredictionInput
 
         with pytest.raises(ValidationError, match="finite"):
@@ -71,6 +72,7 @@ class TestInputValidation:
 
     def test_rejects_ragged_batch(self):
         from pydantic import ValidationError
+
         from api.app import BatchPredictionInput
 
         with pytest.raises(ValidationError, match="same length"):
@@ -78,6 +80,7 @@ class TestInputValidation:
 
     def test_rejects_feature_count_before_scaler(self, monkeypatch):
         import numpy as np
+
         import api.app as api_app
 
         class Scaler:
