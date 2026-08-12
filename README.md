@@ -433,6 +433,10 @@ xai-ids-cicids2017/
 
 ---
 
+## Reproducibility
+
+See [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md) for the supported synthetic-data quick start, expected artifacts, validation commands, and real-dataset caveats.
+
 ## Testing
 
 ```bash
