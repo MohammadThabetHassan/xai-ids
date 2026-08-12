@@ -1,0 +1,81 @@
+name: Reproducibility report
+description: Report a result that cannot be reproduced from the documented xai-ids path
+title: "[Reproducibility] "
+labels:
+  - reproducibility
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for a reproducibility failure or a mismatch between documented and observed results. Do not include credentials, private data, or restricted dataset files.
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or release
+      description: Provide the commit SHA or version used for the run.
+      placeholder: v1.0.0 or 0123456
+    validations:
+      required: true
+
+  - type: input
+    id: dataset
+    attributes:
+      label: Dataset and split
+      description: State the dataset release, split, feature count, and sample size.
+      placeholder: CIC-IDS-2017, Friday afternoon, 78 features
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include Python version, operating system, and relevant package versions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Reproduction command
+      description: Paste the exact command and configuration used.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: Link the model card, results table, or reproducibility guide and state the expected output.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: Describe the observed output, error, or metric difference.
+    validations:
+      required: true
+
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Evidence and artifacts
+      description: Provide safe links to logs, manifests, or generated result files. Do not upload credentials or restricted datasets.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Triage checks
+      options:
+        - label: I checked docs/REPRODUCIBILITY.md and the model card.
+          required: true
+        - label: I removed credentials, personal data, and restricted dataset content.
+          required: true
+        - label: I checked the applicable dataset, model, and dependency licenses before attaching artifacts.
+          required: true
