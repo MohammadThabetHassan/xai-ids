@@ -1,0 +1,74 @@
+name: Publish release bundle
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build versioned demo bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          if [ -n "${GITHUB_REF_NAME:-}" ] && [[ "$GITHUB_REF_NAME" == v* ]]; then
+            version="$GITHUB_REF_NAME"
+          else
+            version="${{ inputs.tag }}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build release manifest and bundle
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          mkdir -p release/build
+          cat > release/build/manifest.json <<EOF
+          {
+            "version": "${RELEASE_VERSION}",
+            "commit": "${GITHUB_SHA}",
+            "entrypoints": ["run_pipeline.py", "api/app.py", "examples/predict_example.py"],
+            "quick_start": "docs/REPRODUCIBILITY.md",
+            "model_card": "MODEL_CARD.md",
+            "results": "RESULTS.md",
+            "excluded_from_bundle": ["data/raw", "outputs", "models", ".venv", "node_modules"]
+          }
+          EOF
+          tar -czf "release/build/xai-ids-${RELEASE_VERSION}.tar.gz" \
+            --exclude='./.git' \
+            --exclude='./data/raw' \
+            --exclude='./outputs' \
+            --exclude='./models' \
+            --exclude='release/build' \
+            --exclude='./.venv' \
+            --exclude='./__pycache__' \
+            README.md LICENSE MODEL_CARD.md RESULTS.md pyproject.toml requirements.txt \
+            run_pipeline.py api src tests examples docs Dockerfile Makefile release
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "$RELEASE_VERSION" \
+            "release/build/xai-ids-${RELEASE_VERSION}.tar.gz" \
+            "release/build/manifest.json" \
+            --title "xai-ids ${RELEASE_VERSION}" \
+            --generate-notes
