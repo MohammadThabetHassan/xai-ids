@@ -25,8 +25,8 @@ XAI-IDS is a multi-dataset Explainable AI-based Intrusion Detection System evalu
 ## Getting Started
 
 ```bash
-git clone https://github.com/MohammadThabetHassan/xai-ids-cicids2017.git
-cd xai-ids-cicids2017
+git clone https://github.com/MohammadThabetHassan/xai-ids.git
+cd xai-ids
 pip install -r requirements.txt
 python run_pipeline.py
 ```
@@ -36,9 +36,9 @@ python run_pipeline.py
 - [Methodology](methodology.md) - XCS formula and technical details
 - [Full Results](../RESULTS.md) - Complete metrics tables
 - [Model Card](../MODEL_CARD.md) - Model details and limitations
-- [GitHub Pages](https://mohammadthabethassan.github.io/xai-ids-cicids2017/) - Interactive demo
+- [GitHub Pages](https://mohammadthabethassan.github.io/xai-ids/) - Interactive demo
 
 ## Links
 
-- **Repository**: [GitHub](https://github.com/MohammadThabetHassan/xai-ids-cicids2017)
+- **Repository**: [GitHub](https://github.com/MohammadThabetHassan/xai-ids)
 - **Datasets**: [CIC-IDS-2017](https://www.unb.ca/cic/datasets/ids-2017.html) | [UNSW-NB15](https://www.unsw.adfa.edu.au/unsw-canberra-cyber/cybersecurity/ADFA-NB15-Datasets/)

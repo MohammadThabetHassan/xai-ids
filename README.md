@@ -11,7 +11,7 @@ An Explainable AI-based Intrusion Detection System that combines machine learnin
 
 > **Abstract:** We present XAI-IDS, a multi-dataset intrusion detection framework combining XGBoost, Random Forest, LightGBM, and VotingEnsemble classifiers with SHAP and LIME explainability methods and a novel XAI Confidence Score (XCS) that quantifies explanation trustworthiness. Evaluated on 3 datasets totalling 16M+ records across 26 attack classes, our best model achieves F1=0.9964 on CIC-IDS-2017 and F1=0.7933 on UNSW-NB15. XCS correctly identifies low-confidence predictions with 5% flag rate on UNSW-NB15, enabling targeted human analyst review. Statistical significance testing (McNemar's test, paired t-test) validates model comparisons, and adversarial robustness evaluation demonstrates XCS degradation under FGSM attacks.
 
-**Live Documentation:** [GitHub Pages](https://mohammadthabethassan.github.io/xai-ids-cicids2017/) | [Full Results](RESULTS.md) | [Model Card](MODEL_CARD.md)
+**Live Documentation:** [GitHub Pages](https://mohammadthabethassan.github.io/xai-ids/) | [Full Results](RESULTS.md) | [Model Card](MODEL_CARD.md)
 
 ---
 
@@ -91,8 +91,8 @@ This project evaluates on **3 benchmark intrusion detection datasets**:
 
 ```bash
 # Clone the repository
-git clone https://github.com/MohammadThabetHassan/xai-ids-cicids2017.git
-cd xai-ids-cicids2017
+git clone https://github.com/MohammadThabetHassan/xai-ids.git
+cd xai-ids
 
 # Install dependencies
 pip install -r requirements.txt
@@ -372,7 +372,7 @@ docker run -p 8000:8000 xai-ids uvicorn api.app:app --host 0.0.0.0 --port 8000
 ## Repository Structure
 
 ```
-xai-ids-cicids2017/
+xai-ids/
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml                    # CI workflow (tests + imports)
@@ -484,7 +484,7 @@ If you use this work in your research, please cite:
   author = {Hassan, Mohammad Thabet and Sadek, Fahad and Sami, Ahmed},
   title = {XAI-IDS: Explainable AI Intrusion Detection System},
   year = {2026},
-  url = {https://github.com/MohammadThabetHassan/xai-ids-cicids2017},
+  url = {https://github.com/MohammadThabetHassan/xai-ids},
   license = {MIT}
 }
 ```
