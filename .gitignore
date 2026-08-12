@@ -5,3 +5,14 @@ models/rf_CICIDS2017.joblib
 fastapi_app/
 __pycache__/
 *.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
