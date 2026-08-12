@@ -59,6 +59,37 @@ class TestHealthFeaturesEndpoint:
         assert response.status_code in (200, 503)
 
 
+class TestInputValidation:
+    """Validate request boundaries before model execution."""
+
+    def test_rejects_non_finite_features(self):
+        from pydantic import ValidationError
+        from api.app import PredictionInput
+
+        with pytest.raises(ValidationError, match="finite"):
+            PredictionInput(features=[0.0, float("nan")])
+
+    def test_rejects_ragged_batch(self):
+        from pydantic import ValidationError
+        from api.app import BatchPredictionInput
+
+        with pytest.raises(ValidationError, match="same length"):
+            BatchPredictionInput(features=[[0.0, 1.0], [0.0]])
+
+    def test_rejects_feature_count_before_scaler(self, monkeypatch):
+        import numpy as np
+        import api.app as api_app
+
+        class Scaler:
+            n_features_in_ = 3
+
+        monkeypatch.setattr(api_app, "scaler", Scaler())
+        with pytest.raises(api_app.HTTPException) as exc_info:
+            api_app._validate_feature_count(np.zeros((1, 2)))
+        assert exc_info.value.status_code == 400
+        assert "expected 3 features" in exc_info.value.detail
+
+
 class TestPredictEndpoint:
     """Test POST /predict endpoint."""
 

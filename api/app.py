@@ -21,6 +21,7 @@ only, ~10ms) and /explain for full XCS with explanations.
 """
 
 import json
+import math
 import sys
 import time
 from contextlib import asynccontextmanager
@@ -30,7 +31,7 @@ from typing import List, Optional
 import joblib
 import numpy as np
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -77,6 +78,22 @@ class PredictionInput(BaseModel):
         min_length=1,
         max_length=100,
     )
+
+    @field_validator("features")
+    @classmethod
+    def reject_non_finite_features(cls, values: List[float]) -> List[float]:
+        if not all(math.isfinite(value) for value in values):
+            raise ValueError("features must contain only finite numbers")
+        return values
+
+
+def _validate_feature_count(features: np.ndarray) -> None:
+    expected = getattr(scaler, "n_features_in_", None)
+    if expected is not None and features.shape[1] != expected:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid input: expected {expected} features, got {features.shape[1]}",
+        )
 
 
 class PredictionOutput(BaseModel):
@@ -463,7 +480,8 @@ async def predict(input_data: PredictionInput):
         raise HTTPException(status_code=503, detail="Label encoder not loaded")
 
     try:
-        features = np.array(input_data.features).reshape(1, -1)
+        features = np.array(input_data.features, dtype=np.float64).reshape(1, -1)
+        _validate_feature_count(features)
         features_scaled = scaler.transform(features)
 
         model = models.get("random_forest") or models.get("xgboost") or models.get("lightgbm")
@@ -496,9 +514,11 @@ async def predict(input_data: PredictionInput):
             status_code=400,
             detail=f"Invalid input: expected {scaler.n_features_in_} features, got {len(input_data.features)}"
         )
-    except Exception as e:
-        logger.error(f"Prediction error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Prediction error")
+        raise HTTPException(status_code=500, detail="Prediction failed") from None
 
 
 @app.post("/explain", response_model=ExplanationOutput)
@@ -533,7 +553,8 @@ async def explain(input_data: PredictionInput):
         raise HTTPException(status_code=503, detail="Label encoder not loaded")
 
     try:
-        features = np.array(input_data.features).reshape(1, -1)
+        features = np.array(input_data.features, dtype=np.float64).reshape(1, -1)
+        _validate_feature_count(features)
         features_scaled = scaler.transform(features)
 
         model = models.get("random_forest")
@@ -620,9 +641,11 @@ async def explain(input_data: PredictionInput):
             status_code=400,
             detail=f"Invalid input: expected {scaler.n_features_in_} features, got {len(input_data.features)}"
         )
-    except Exception as e:
-        logger.error(f"Explanation error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Explanation error")
+        raise HTTPException(status_code=500, detail="Explanation failed") from None
 
 
 class BatchPredictionInput(BaseModel):
@@ -632,6 +655,18 @@ class BatchPredictionInput(BaseModel):
         min_length=1,
         max_length=100,
     )
+
+    @field_validator("features")
+    @classmethod
+    def reject_invalid_vectors(cls, values: List[List[float]]) -> List[List[float]]:
+        if not values or any(not vector for vector in values):
+            raise ValueError("features must contain non-empty vectors")
+        width = len(values[0])
+        if any(len(vector) != width for vector in values):
+            raise ValueError("all feature vectors must have the same length")
+        if not all(math.isfinite(value) for vector in values for value in vector):
+            raise ValueError("features must contain only finite numbers")
+        return values
 
 
 class BatchPredictionOutput(BaseModel):
@@ -662,7 +697,8 @@ async def predict_batch(input_data: BatchPredictionInput):
         raise HTTPException(status_code=503, detail="Label encoder not loaded")
 
     try:
-        features = np.array(input_data.features)
+        features = np.array(input_data.features, dtype=np.float64)
+        _validate_feature_count(features)
         features_scaled = scaler.transform(features)
 
         model = models.get("random_forest") or models.get("xgboost") or models.get("lightgbm")
@@ -678,11 +714,13 @@ async def predict_batch(input_data: BatchPredictionInput):
 
         return BatchPredictionOutput(predictions=preds, confidences=confs, xcs_scores=xcs)
 
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid input: {e}")
-    except Exception as e:
-        logger.error(f"Batch prediction error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid batch input")
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Batch prediction error")
+        raise HTTPException(status_code=500, detail="Batch prediction failed") from None
 
 
 @app.get("/classes")
