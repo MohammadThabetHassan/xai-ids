@@ -1,6 +1,6 @@
 # XAI-IDS Benchmarks
 
-Comprehensive benchmark results for all models, datasets, and configurations.
+Benchmark results for every model and dataset configuration reported in this repository, with the exact run settings used to produce them.
 
 ---
 

@@ -70,7 +70,7 @@ This roadmap outlines the planned enhancements for the XAI-IDS project, organize
 
 | # | Task | Impact | Effort | Status |
 |---|------|--------|--------|--------|
-| 4.1 | Add comprehensive unit tests | MEDIUM | 4 hours | Complete |
+| 4.1 | Unit tests for evaluation, explainability, and XCS | MEDIUM | 4 hours | Complete |
 | 4.2 | Add regression tests for outputs | MEDIUM | 2 hours | Pending |
 | 4.3 | Create Dockerfile | MEDIUM | 2 hours | Complete |
 | 4.4 | Add FastAPI inference endpoint | MEDIUM | 3 hours | Complete |
@@ -117,15 +117,14 @@ Phase 5 (Portfolio) ← final polish after all above
 
 ## Success Metrics
 
-| Phase | Metric | Target | Actual |
-|-------|--------|--------|--------|
-| 1 | Per-class metrics visibility | All 15 classes shown in docs | ✅ |
-| 2 | Macro F1-score | > 0.60 (from 0.44) | ✅ 0.51 (synthetic) |
-| 2 | Attack class detection | All classes > 0% recall | ⚠️ Most improved |
-| 3 | Real data benchmark | 3 datasets evaluated | ✅ CICIDS2017, UNSWNB15, CICIDS2018 |
-| 3 | Best XGBoost accuracy | > 99% | ✅ 99.66% (CICIDS2017) |
-| 4 | Test coverage | > 80% code coverage | ⚠️ 24 tests |
-| 5 | GitHub stars | TBD based on promotion | - |
+| Phase | Metric | Target | Outcome |
+|-------|--------|--------|---------|
+| 1 | Per-class metrics visibility | All 15 classes shown in docs | Met |
+| 2 | Macro F1 (synthetic split) | > 0.60 | Not met — 0.51 |
+| 2 | Attack-class detection | All classes above 0% recall | Partial — improved, some classes still 0% |
+| 3 | Real-data benchmark | 3 datasets evaluated | Met — CIC-IDS-2017, UNSW-NB15, CSE-CIC-IDS-2018 |
+| 3 | Best XGBoost accuracy | > 99% | Met — 99.66% on CIC-IDS-2017 |
+| 4 | Test coverage | > 80% line coverage | Not measured — 24 tests, coverage not yet gated |
 
 ---
 

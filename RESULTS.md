@@ -1,6 +1,6 @@
 # XAI-IDS Results
 
-Comprehensive evaluation results across all datasets and models.
+Evaluation results for all four classifiers on the three benchmark datasets, including per-class breakdowns and statistical comparisons.
 
 ---
 
