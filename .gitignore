@@ -16,3 +16,11 @@ htmlcov/
 !.env.example
 .vscode/
 .idea/
+
+# Run logs and pipeline scratch output
+outputs/logs/
+*.log
+
+# Stray serialised objects; the API loads scalers from models/
+data/raw/*.pickle
+data/raw/*.pkl

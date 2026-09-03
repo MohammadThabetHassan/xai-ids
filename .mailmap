@@ -1,0 +1,16 @@
+# Canonical author identities for this repository.
+# Maps the historical name/email variants used during development onto one
+# identity per contributor, so `git log`, `git shortlog` and `git blame`
+# attribute work consistently.
+
+Mohammad Thabet Hassan <MohammadThabetHassan@users.noreply.github.com> <141744086+MohammadThabetHassan@users.noreply.github.com>
+Mohammad Thabet Hassan <MohammadThabetHassan@users.noreply.github.com> <20220002188@students.cud.ac.ae>
+Mohammad Thabet Hassan <MohammadThabetHassan@users.noreply.github.com> <MohammadThabetHassan@users.noreply.github.com>
+Mohammad Thabet Hassan <MohammadThabetHassan@users.noreply.github.com> <mohammad@example.com>
+
+Ahmed Alameri <AhmedSamiAlameri@users.noreply.github.com> <20220001166@students.cud.ac.ae>
+Ahmed Alameri <AhmedSamiAlameri@users.noreply.github.com> <AhmedSamiAlameri@users.noreply.github.com>
+Ahmed Alameri <AhmedSamiAlameri@users.noreply.github.com> <ahmedsami@github.com>
+
+Fahad Sadek <fahadALjazzeri@users.noreply.github.com> <fahad6789123@users.noreply.github.com>
+Fahad Sadek <fahadALjazzeri@users.noreply.github.com> <fahad6789123@github.com>
