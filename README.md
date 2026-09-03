@@ -9,7 +9,7 @@
 
 An Explainable AI-based Intrusion Detection System that combines machine learning classifiers with **SHAP** and **LIME** explainability techniques, evaluated across **3 datasets** (CIC-IDS-2017, UNSW-NB15, CSE-CIC-IDS-2018) with a novel **XAI Confidence Score (XCS)** for measuring explanation reliability.
 
-> **Abstract:** We present XAI-IDS, a multi-dataset intrusion detection framework combining XGBoost, Random Forest, LightGBM, and VotingEnsemble classifiers with SHAP and LIME explainability methods and a novel XAI Confidence Score (XCS) that quantifies explanation trustworthiness. Evaluated on 3 datasets totalling 16M+ records across 26 attack classes, our best model achieves F1=0.9964 on CIC-IDS-2017 and F1=0.7933 on UNSW-NB15. XCS correctly identifies low-confidence predictions with 5% flag rate on UNSW-NB15, enabling targeted human analyst review. Statistical significance testing (McNemar's test, paired t-test) validates model comparisons, and adversarial robustness evaluation demonstrates XCS degradation under FGSM attacks.
+> **Abstract:** We present XAI-IDS, a multi-dataset intrusion detection framework combining XGBoost, Random Forest, LightGBM, and VotingEnsemble classifiers with SHAP and LIME explainability methods and a novel XAI Confidence Score (XCS) that quantifies explanation trustworthiness. Evaluated on 3 datasets totalling 16M+ records across 26 attack classes, our best model achieves F1=0.9964 on CIC-IDS-2017 and F1=0.7933 on UNSW-NB15. On synthetic probe sets (n=100 per dataset) the full three-term XCS flags 5% of UNSW-NB15 predictions for analyst review; those probe sets carry no ground-truth labels, so this is a flag rate and not a measure of flagging accuracy. Statistical significance testing (McNemar's test, paired t-test) validates model comparisons, and adversarial robustness evaluation demonstrates XCS degradation under FGSM attacks.
 
 **Live Documentation:** [GitHub Pages](https://mohammadthabethassan.github.io/xai-ids/) | [Full Results](RESULTS.md) | [Model Card](MODEL_CARD.md)
 
@@ -300,8 +300,23 @@ Where:
 | UNSW-NB15 | 0.424 | 0.469 | 0.360 | 14 / 80 (17.5%) |
 | CSE-CIC-IDS-2018 | 0.550 | 0.550 | N/A | 0 / 86 (0%) |
 
-Key finding: wrong predictions have lower XCS than correct ones across
-all datasets, confirming XCS as a trustworthiness signal.
+Key finding: wrong predictions score lower than correct ones across all
+datasets. This separation cannot yet be credited to the explainability terms.
+In this run `shap_instability` is 0.5 and `jaccard_sl` is 0.0 for every
+sample, because per-sample LIME did not execute and the instability ratio
+saturated its 0.5 clamp. XCS therefore reduces to `0.4 x confidence + 0.15`
+and correlates with confidence at r = 1.000 on CIC-IDS-2017 and UNSW-NB15
+(0.998 on CSE-CIC-IDS-2018). The separation shown here is the well-known
+tendency of a calibrated classifier to be less confident when wrong; it is
+not independent evidence for the three-term metric.
+
+The flag rate in this table (17.5% on UNSW-NB15) and the 5% quoted in the
+abstract come from different runs and are not comparable: this table is the
+real-data run with the two explainability terms inert, while the 5% figure
+is the synthetic probe set where the full formula executes but no labels
+exist. Establishing whether XCS improves on confidence alone requires
+re-running the full formula against a labelled real test split and
+comparing the two as review triggers.
 Values computed on real data with full XCS formula (n=74–86 per dataset).
 See `explanations/xcs_*.csv` for per-sample data.
 
