@@ -396,12 +396,16 @@ for name, ds in DATASETS.items():
     models['LightGBM'], train_time['LightGBM'] = lgb_m, time.time() - t0
 
     # Ensemble members are refit by VotingClassifier, so iteration counts are fixed
-    # to the validation-selected values.
+    # to the validation-selected values. Balancing is applied once, through the
+    # shared sample weights, so RF and LightGBM members drop their class weights.
     t0 = time.time()
     xgb_fixed = xgb.XGBClassifier(n_estimators=(xgb_m.best_iteration or XGB_EPOCHS - 1) + 1, **xgb_params)
-    lgb_fixed = lgb.LGBMClassifier(n_estimators=max(1, lgb_m.best_iteration_ or 300), **lgb_params)
-    ens = VotingClassifier([('xgb', xgb_fixed), ('rf', rf_m), ('lgb', lgb_fixed)], voting='soft', n_jobs=1)
-    ens.fit(X_tr, y_tr, sample_weight=sw)
+    rf_ens = RandomForestClassifier(n_estimators=200, max_depth=20, min_samples_split=5,
+                                    n_jobs=-1, random_state=RANDOM_STATE)
+    lgb_fixed = lgb.LGBMClassifier(n_estimators=max(1, lgb_m.best_iteration_ or 300),
+                                   **{**lgb_params, 'class_weight': None})
+    ens = VotingClassifier([('xgb', xgb_fixed), ('rf', rf_ens), ('lgb', lgb_fixed)], voting='soft', n_jobs=1)
+    ens.fit(X_tr, y_tr, sample_weight=compute_sample_weight('balanced', y_tr))
     models['Ensemble'], train_time['Ensemble'] = ens, time.time() - t0
 
     ALL_RESULTS[name] = {m: {'model': mdl, 'proba': mdl.predict_proba(X_te), 'train_s': train_time[m]}
