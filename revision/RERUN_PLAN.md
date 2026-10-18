@@ -15,7 +15,11 @@
 - No feature list contains `Port`.
 
 ## 3. What to bring back
-Download `/kaggle/working/xai_ids_revised/` (zip it from the Output tab) and copy it to `C:\Users\omara\Documents\xai-ids-revision\results\`. The paper will be rewritten from these files only:
+1. Download `/kaggle/working/xai_ids_revised/` (zip it from the Output tab).
+2. Commit its contents, except `models/` (too large), to this repo under `results/revised/` on a new branch, for example `results/revised-run`. Also include the full Kaggle log as `results/revised/run_log.txt`.
+3. Open a pull request. In the description, give the Kaggle notebook version and say whether `LIME_SAMPLES` or any other setting was changed.
+
+The paper will be rewritten from these files only:
 
 | File | Used for |
 |---|---|
