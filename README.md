@@ -9,7 +9,7 @@
 
 An Explainable AI-based Intrusion Detection System that combines machine learning classifiers with **SHAP** and **LIME** explainability techniques, evaluated across **3 datasets** (CIC-IDS-2017, UNSW-NB15, CSE-CIC-IDS-2018) with a novel **XAI Confidence Score (XCS)** for measuring explanation reliability.
 
-> **Abstract:** We present XAI-IDS, a multi-dataset intrusion detection framework combining XGBoost, Random Forest, LightGBM, and VotingEnsemble classifiers with SHAP and LIME explainability methods and a novel XAI Confidence Score (XCS) that quantifies explanation trustworthiness. Evaluated on 3 datasets totalling 16M+ records across 26 attack classes, our best model achieves F1=0.9964 on CIC-IDS-2017 and F1=0.7933 on UNSW-NB15. On synthetic probe sets (n=100 per dataset) the full three-term XCS flags 5% of UNSW-NB15 predictions for analyst review; those probe sets carry no ground-truth labels, so this is a flag rate and not a measure of flagging accuracy. Statistical significance testing (McNemar's test, paired t-test) validates model comparisons, and adversarial robustness evaluation demonstrates XCS degradation under FGSM attacks.
+> **Abstract:** We present XAI-IDS, a multi-dataset intrusion detection framework combining XGBoost, Random Forest, LightGBM, and VotingEnsemble classifiers with SHAP and LIME explainability methods and a proposed XAI Confidence Score (XCS) intended to quantify explanation trustworthiness. Models are trained on capped samples (at most 200k / 145k / 200k flows before deduplication) of CIC-IDS-2017 (14 classes), UNSW-NB15 (10 classes) and CSE-CIC-IDS-2018 (only 2 classes were loaded in the current run). XGBoost reaches weighted F1 = 0.9964 on CIC-IDS-2017 and 0.7982 on UNSW-NB15 (macro F1 0.81 and 0.52). XCS has not yet been validated: in the labelled real-data run two of its three terms were constant, and the 5% UNSW-NB15 flag rate comes from probe inputs of random Gaussian noise with no labels. A corrected re-run that compares XCS against model confidence is pending.
 
 **Live Documentation:** [GitHub Pages](https://mohammadthabethassan.github.io/xai-ids/) | [Full Results](RESULTS.md) | [Model Card](MODEL_CARD.md)
 
@@ -303,21 +303,30 @@ Where:
 Key finding: wrong predictions score lower than correct ones across all
 datasets. This separation cannot yet be credited to the explainability terms.
 In this run `shap_instability` is 0.5 and `jaccard_sl` is 0.0 for every
-sample, because per-sample LIME did not execute and the instability ratio
-saturated its 0.5 clamp. XCS therefore reduces to `0.4 x confidence + 0.15`
+sample, because of two bugs in the XCS code:
+
+- **Jaccard:** LIME did run, but its top features are condition strings such as
+  `Fwd IAT Std <= 14.59`, and these were compared directly with SHAP feature
+  names, so the two sets never overlapped.
+- **Instability:** `np.std` was taken over the flattened neighbour x feature
+  array, i.e. the spread of SHAP values *across features* rather than across
+  perturbations, so the ratio exceeded the 0.5 clamp for every sample.
+
+XCS therefore reduces to `0.4 x confidence + 0.15`
 and correlates with confidence at r = 1.000 on CIC-IDS-2017 and UNSW-NB15
 (0.998 on CSE-CIC-IDS-2018). The separation shown here is the well-known
-tendency of a calibrated classifier to be less confident when wrong; it is
+tendency of a classifier to be less confident when wrong; it is
 not independent evidence for the three-term metric.
 
-The flag rate in this table (17.5% on UNSW-NB15) and the 5% quoted in the
-abstract come from different runs and are not comparable: this table is the
-real-data run with the two explainability terms inert, while the 5% figure
-is the synthetic probe set where the full formula executes but no labels
-exist. Establishing whether XCS improves on confidence alone requires
-re-running the full formula against a labelled real test split and
-comparing the two as review triggers.
-Values computed on real data with full XCS formula (n=74–86 per dataset).
+The flag rate in this table (17.5% on UNSW-NB15) and the 5% quoted in earlier
+versions of the abstract come from different runs and are not comparable: this
+table is the real-data run with the two explainability terms inert, while the 5%
+figure comes from `scripts/recompute_xcs.py`, whose inputs are random Gaussian
+noise passed through the scaler (no labels, not network traffic). Establishing
+whether XCS improves on confidence alone requires re-running the corrected
+formula against a labelled real test split and comparing the two as review
+triggers.
+Values computed on real data (n=74–86 per dataset, the first n test samples of each class).
 See `explanations/xcs_*.csv` for per-sample data.
 
 ![XCS Distribution](plots/xcs_CICIDS2017.png)
