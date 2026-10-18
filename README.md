@@ -13,6 +13,8 @@ An Explainable AI-based Intrusion Detection System that combines machine learnin
 
 **Live Documentation:** [GitHub Pages](https://mohammadthabethassan.github.io/xai-ids/) | [Full Results](RESULTS.md) | [Model Card](MODEL_CARD.md)
 
+> **Revision in progress:** the reported results are being re-run with a corrected pipeline. See [`revision/RERUN_PLAN.md`](revision/RERUN_PLAN.md) for how to run it, and [`revision/CHANGES.md`](revision/CHANGES.md) for what was fixed.
+
 ---
 
 ## Table of Contents
