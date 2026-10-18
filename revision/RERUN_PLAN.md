@@ -1,12 +1,19 @@
 # Re-run plan
 
 ## 1. Kaggle setup
-1. Create a new Kaggle notebook (Python). GPU is optional: training uses it, but SHAP, LIME and the latency timings run on CPU.
+1. Create a new Kaggle notebook (Python). In the right-hand **Settings** panel, turn **Internet on**. GPU is optional: training uses it, but SHAP, LIME and the latency timings run on CPU.
 2. Attach these datasets with **Add data**:
    - `dhoogla/cicids2017` (parquet, cleaned version of CIC-IDS-2017)
    - `dhoogla/unswnb15` (parquet, `attack_cat` label)
    - `solarmainframe/ids-intrusion-csv` (**all ten** CSE-CIC-IDS-2018 day files). Do not use the old `mohdqwe123/dataset1/csecicids2018` folder.
-3. Paste `revision/xai_ids_revised.py` into one cell (or upload it as a script) and run it. Expect about 1.5–2.5 h, mostly LIME. If it runs out of time, set `LIME_SAMPLES = 500` and note that in the paper.
+
+   These names were taken from the original notebook and have not been re-checked on Kaggle. If one can't be found, search Kaggle for the dataset (CIC-IDS-2017, UNSW-NB15 with `attack_cat`, or CSE-CIC-IDS-2018 with all ten days) and note which one you used. If the script prints `NOT FOUND` for a dataset, run `!ls /kaggle/input` to see where it was mounted. Then add that path to the matching list in `PATHS` near the top of the script.
+3. In the first cell, install the libraries that may be missing from the Kaggle image:
+   ```
+   !pip install -q lime imbalanced-learn
+   ```
+4. Paste `revision/xai_ids_revised.py` into the second cell.
+5. Run it with **Save Version → Save & Run All (Commit)**, not interactively. The run takes about 1.5–2.5 h, mostly LIME, and an interactive session can stop when idle. A saved version runs in the background and keeps its output. If it runs out of time, set `LIME_SAMPLES = 500` and note that in the paper.
 
 ## 2. Check the log before trusting any number
 - `Loading CICIDS2018` lists all ten files, and **the class list has more than 2 classes** (expect about 15, e.g. Bot, FTP/SSH brute force, DoS GoldenEye/Hulk/Slowloris/SlowHTTPTest, DDoS LOIC-HTTP/LOIC-UDP/HOIC, Infilteration, web attacks).
@@ -15,9 +22,10 @@
 - No feature list contains `Port`.
 
 ## 3. What to bring back
-1. Download `/kaggle/working/xai_ids_revised/` (zip it from the Output tab).
-2. Commit its contents, except `models/` (too large), to this repo under `results/revised/` on a new branch, for example `results/revised-run`. Also include the full Kaggle log as `results/revised/run_log.txt`.
-3. Open a pull request. In the description, give the Kaggle notebook version and say whether `LIME_SAMPLES` or any other setting was changed.
+1. When the saved version finishes, open it. From its **Output** tab, download the `xai_ids_revised/` folder. From its **Logs** tab, download the full log.
+2. Hand the results back:
+   - **With write access to this repo:** commit the folder's contents, except `models/` (too large), under `results/revised/` on a new branch, for example `results/revised-run`. Save the log as `results/revised/run_log.txt`. Open a pull request. In the description, give the Kaggle version number and say whether `LIME_SAMPLES`, a dataset or any other setting was changed.
+   - **Without write access:** zip the folder (without `models/`) together with the log, and send it to the paper's lead with the same notes.
 
 The paper will be rewritten from these files only:
 
