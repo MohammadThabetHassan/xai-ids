@@ -1,5 +1,13 @@
 # XAI-IDS Results
 
+> **Status (Oct 2026): these results are under revision.** The run below has these problems:
+> - XGBoost and LightGBM early stopping used the test set.
+> - Feature selection and scaling were fitted before the train/test split.
+> - CSE-CIC-IDS-2018 loaded only 2 classes because of a loader bug.
+> - The XCS instability and Jaccard terms were constant, because of code bugs.
+>
+> The XCS "key findings" below are therefore properties of model confidence alone. The per-class tables below have no generating script, and they disagree with the confusion matrices in `plots/`. See [`revision/CHANGES.md`](revision/CHANGES.md) for the fixes, and [`revision/RERUN_PLAN.md`](revision/RERUN_PLAN.md) for the pending re-run.
+
 Evaluation results for all four classifiers on the three benchmark datasets, including per-class breakdowns and statistical comparisons.
 
 ---
