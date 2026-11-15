@@ -1,0 +1,166 @@
+# Kaggle log: omaralraas/xai-ids-corrected-rerun, version 2 (rerun2 @4a56e29 imbalance auto)
+# Successfully ran in 4172.4s
+10.3s	1	0.00s - Debugger warning: It seems that frozen modules are being used, which may
+10.3s	2	0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+10.3s	3	0.00s - to python to disable frozen modules.
+10.3s	4	0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+11.3s	5	0.00s - Debugger warning: It seems that frozen modules are being used, which may
+11.3s	6	0.00s - make the debugger miss breakpoints. Please pass -Xfrozen_modules=off
+11.3s	7	0.00s - to python to disable frozen modules.
+11.3s	8	0.00s - Note: Debugging will proceed. Set PYDEVD_DISABLE_FILE_VALIDATION=1 to disable this validation.
+12.8s	9	missing before install: []
+29.5s	10	device: cpu | OUT: /kaggle/working/xai_ids_revised
+29.5s	11	
+29.5s	12	Loading CICIDS2017
+29.5s	13	8 parquet files
+31.4s	14	sampled Benign-Monday-no-metadata.parquet : 50000 | labels: {'Benign': 458831}
+32.2s	15	sampled Botnet-Friday-no-metadata.parquet : 26437 | labels: {'Benign': 174601, 'Bot': 1437}
+34.1s	16	sampled Bruteforce-Tuesday-no-metadata.parquet : 25816 | labels: {'Benign': 380564, 'FTP-Patator': 5931, 'SSH-Patator': 3219}
+35.1s	17	sampled DDoS-Friday-no-metadata.parquet : 50000 | labels: {'Benign': 93250, 'DDoS': 128014}
+37.1s	18	sampled DoS-Wednesday-no-metadata.parquet : 35623 | labels: {'Benign': 391235, 'DoS GoldenEye': 10286, 'DoS Hulk': 172846, 'DoS Slowhttptest': 5228, 'DoS slowloris': 5385, 'Heartbleed': 11}
+37.9s	19	sampled Infiltration-Thursday-no-metadata.parquet : 25036 | labels: {'Benign': 207594, 'Infiltration': 36}
+38.4s	20	sampled Portscan-Friday-no-metadata.parquet : 26956 | labels: {'Benign': 117566, 'PortScan': 1956}
+39.0s	21	sampled WebAttacks-Thursday-no-metadata.parquet : 14643 | labels: {'Benign': 153677, 'Web Attack - Brute Force': 1470, 'Web Attack - Sql Injection': 21, 'Web Attack - XSS': 652}
+43.0s	22	cleaning log: {'raw_rows': 254511, 'after_nan_inf': 254511, 'after_dedup': 253144, 'label_conflict_rows': 38, 'rare_classes_dropped': {}, 'final_rows': 200000}
+43.0s	23	classes: 15 ['Benign', 'Bot', 'DDoS', 'DoS GoldenEye', 'DoS Hulk', 'DoS Slowhttptest', 'DoS slowloris', 'FTP-Patator', 'Heartbleed', 'Infiltration', 'PortScan', 'SSH-Patator', 'Web Attack - Brute Force', 'Web Attack - Sql Injection', 'Web Attack - XSS']
+43.0s	24	
+43.0s	25	Loading UNSWNB15
+43.0s	26	2 parquet files
+43.4s	27	sampled UNSW_NB15_testing-set.parquet : 55461 | labels: {'Analysis': 677, 'Backdoor': 583, 'DoS': 4089, 'Exploits': 11132, 'Fuzzers': 6062, 'Generic': 18871, 'Normal': 37000, 'Reconnaissance': 3496, 'Shellcode': 378, 'Worms': 44}
+43.8s	28	sampled UNSW_NB15_training-set.parquet : 85764 | labels: {'Analysis': 2000, 'Backdoor': 1746, 'DoS': 12264, 'Exploits': 33393, 'Fuzzers': 18184, 'Generic': 40000, 'Normal': 56000, 'Reconnaissance': 10491, 'Shellcode': 1133, 'Worms': 130}
+44.5s	29	cleaning log: {'raw_rows': 141225, 'after_nan_inf': 141225, 'after_dedup': 74008, 'label_conflict_rows': 3622, 'rare_classes_dropped': {}, 'final_rows': 70386}
+44.5s	30	classes: 10 ['Analysis', 'Backdoor', 'DoS', 'Exploits', 'Fuzzers', 'Generic', 'Normal', 'Reconnaissance', 'Shellcode', 'Worms']
+44.5s	31	
+44.5s	32	Loading CICIDS2018
+44.5s	33	10 CSV files
+61.9s	34	sampled 02-14-2018.csv : 19998 | labels: {'Benign': 667626, 'FTP-BruteForce': 193360, 'SSH-Bruteforce': 187589}
+80.5s	35	sampled 02-15-2018.csv : 19998 | labels: {'Benign': 996077, 'DoS attacks-GoldenEye': 41508, 'DoS attacks-Slowloris': 10990}
+102.6s	36	sampled 02-16-2018.csv : 19998 | labels: {'Benign': 446772, 'DoS attacks-Hulk': 461912, 'DoS attacks-SlowHTTPTest': 139890}
+305.7s	37	sampled 02-20-2018.csv : 20000 | labels: {'Benign': 7372557, 'DDoS attacks-LOIC-HTTP': 576191}
+325.4s	38	sampled 02-21-2018.csv : 15062 | labels: {'Benign': 360833, 'DDOS attack-HOIC': 686012, 'DDOS attack-LOIC-UDP': 1730}
+346.9s	39	sampled 02-22-2018.csv : 5362 | labels: {'Benign': 1048213, 'Brute Force -Web': 249, 'Brute Force -XSS': 79, 'SQL Injection': 34}
+368.4s	40	sampled 02-23-2018.csv : 5566 | labels: {'Benign': 1048009, 'Brute Force -Web': 362, 'Brute Force -XSS': 151, 'SQL Injection': 53}
+389.4s	41	sampled 02-28-2018.csv : 20000 | labels: {'Benign': 544200, 'Infilteration': 68871}
+401.2s	42	sampled 03-01-2018.csv : 20000 | labels: {'Benign': 238037, 'Infilteration': 93063}
+422.8s	43	sampled 03-02-2018.csv : 20000 | labels: {'Benign': 762384, 'Bot': 286191}
+430.6s	44	cleaning log: {'raw_rows': 165984, 'after_nan_inf': 165322, 'after_dedup': 133425, 'label_conflict_rows': 1923, 'rare_classes_dropped': {}, 'final_rows': 131502}
+430.6s	45	classes: 15 ['Benign', 'Bot', 'Brute Force -Web', 'Brute Force -XSS', 'DDOS attack-HOIC', 'DDOS attack-LOIC-UDP', 'DDoS attacks-LOIC-HTTP', 'DoS attacks-GoldenEye', 'DoS attacks-Hulk', 'DoS attacks-SlowHTTPTest', 'DoS attacks-Slowloris', 'FTP-BruteForce', 'Infilteration', 'SQL Injection', 'SSH-Bruteforce']
+430.6s	46	
+430.6s	47	Preparing CICIDS2017
+445.5s	48	split: {'train': 128000, 'train_after_smote': 136581, 'val': 32000, 'test': 40000} | features: ['Fwd Seg Size Min', 'Flow IAT Mean', 'Flow Duration', 'Fwd IAT Std', 'Packet Length Max', 'Avg Bwd Segment Size', 'Fwd IAT Total', 'Avg Packet Size', 'Bwd IAT Max', 'Bwd Packet Length Max', 'Packet Length Mean', 'Flow IAT Std', 'Fwd IAT Max', 'Packet Length Std', 'Bwd Packet Length Std', 'Flow IAT Max', 'Active Min', 'Bwd IAT Min', 'PSH Flag Count', 'Protocol']
+445.5s	49	
+445.5s	50	Preparing UNSWNB15
+451.9s	51	split: {'train': 45046, 'train_after_smote': 51492, 'val': 11262, 'test': 14078} | features: ['dbytes', 'sbytes', 'smean', 'dmean', 'ct_src_dport_ltm', 'dload', 'sload', 'synack', 'tcprtt', 'ct_flw_http_mthd', 'ackdat', 'sloss', 'dloss', 'sjit', 'rate', 'spkts', 'dtcpb', 'stcpb', 'dur', 'djit']
+451.9s	52	
+451.9s	53	Preparing CICIDS2018
+467.7s	54	split: {'train': 84160, 'train_after_smote': 101319, 'val': 21041, 'test': 26301} | features: ['Init Fwd Win Byts', 'Fwd Seg Size Min', 'Flow Duration', 'Fwd Pkt Len Max', 'Flow IAT Max', 'Fwd Act Data Pkts', 'Flow IAT Std', 'Fwd Header Len', 'Fwd IAT Tot', 'Fwd IAT Mean', 'Fwd Pkt Len Mean', 'Subflow Fwd Byts', 'Fwd IAT Max', 'ECE Flag Cnt', 'Bwd IAT Min', 'Bwd IAT Std', 'Bwd IAT Mean', 'Subflow Fwd Pkts', 'PSH Flag Cnt', 'Bwd IAT Max']
+467.7s	55	
+467.7s	56	Training on CICIDS2017
+510.5s	57	imbalance=none     val macroF1=0.8555 acc=0.9900
+555.1s	58	imbalance=smote    val macroF1=0.8344 acc=0.9877
+610.5s	59	imbalance=weights  val macroF1=0.7396 acc=0.9472
+669.9s	60	imbalance=both     val macroF1=0.7387 acc=0.9473
+669.9s	61	selected imbalance mode: none
+779.1s	62	XGBoost       acc=0.9905 macroF1=0.8184 (43s)
+779.1s	63	RandomForest  acc=0.9909 macroF1=0.8106 (32s)
+779.1s	64	LightGBM      acc=0.9806 macroF1=0.7061 (4s)
+779.1s	65	Ensemble      acc=0.9907 macroF1=0.8358 (68s)
+779.1s	66	
+779.1s	67	Training on UNSWNB15
+791.4s	68	imbalance=none     val macroF1=0.6748 acc=0.8093
+810.9s	69	imbalance=smote    val macroF1=0.6734 acc=0.8022
+834.0s	70	imbalance=weights  val macroF1=0.6913 acc=0.7954
+860.6s	71	imbalance=both     val macroF1=0.6694 acc=0.7885
+860.6s	72	selected imbalance mode: weights
+947.8s	73	XGBoost       acc=0.7948 macroF1=0.6859 (23s)
+947.8s	74	RandomForest  acc=0.7891 macroF1=0.6664 (18s)
+947.8s	75	LightGBM      acc=0.7973 macroF1=0.6812 (14s)
+947.8s	76	Ensemble      acc=0.7988 macroF1=0.6966 (51s)
+947.8s	77	
+947.8s	78	Training on CICIDS2018
+966.8s	79	imbalance=none     val macroF1=0.8151 acc=0.8916
+995.0s	80	imbalance=smote    val macroF1=0.8329 acc=0.8915
+1029.6s	81	imbalance=weights  val macroF1=0.8078 acc=0.7657
+1071.8s	82	imbalance=both     val macroF1=0.8265 acc=0.7711
+1071.8s	83	selected imbalance mode: smote
+1177.9s	84	XGBoost       acc=0.8912 macroF1=0.8021 (28s)
+1177.9s	85	RandomForest  acc=0.8883 macroF1=0.8054 (27s)
+1177.9s	86	LightGBM      acc=0.8917 macroF1=0.8129 (14s)
+1177.9s	87	Ensemble      acc=0.8917 macroF1=0.8059 (61s)
+1254.0s	88	
+1254.0s	89	dataset         model  accuracy  f1_weighted  f1_macro     ece
+1254.0s	90	0   CICIDS2017       XGBoost    0.9905       0.9899    0.8184  0.0014
+1254.0s	91	1   CICIDS2017  RandomForest    0.9910       0.9902    0.8106  0.0032
+1254.0s	92	2   CICIDS2017      LightGBM    0.9806       0.9827    0.7061  0.0667
+1254.0s	93	3   CICIDS2017      Ensemble    0.9907       0.9900    0.8358  0.0295
+1254.0s	94	4     UNSWNB15       XGBoost    0.7948       0.7992    0.6859  0.0417
+1254.0s	95	5     UNSWNB15  RandomForest    0.7891       0.7930    0.6664  0.0063
+1254.0s	96	6     UNSWNB15      LightGBM    0.7973       0.8011    0.6812  0.0391
+1254.0s	97	7     UNSWNB15      Ensemble    0.7988       0.8027    0.6966  0.0147
+1254.0s	98	8   CICIDS2018       XGBoost    0.8912       0.8647    0.8021  0.0065
+1254.0s	99	9   CICIDS2018  RandomForest    0.8883       0.8611    0.8054  0.0059
+1254.0s	100	10  CICIDS2018      LightGBM    0.8917       0.8654    0.8129  0.0052
+1254.0s	101	11  CICIDS2018      Ensemble    0.8917       0.8635    0.8059  0.0067
+1286.4s	102	
+1286.4s	103	XCS: CICIDS2017
+1612.7s	104	val: n=1113 natural=800 errors=320
+2159.9s	105	test: n=1869 natural=1500 errors=381
+2172.8s	106	
+2172.8s	107	XCS: UNSWNB15
+2588.0s	108	val: n=1200 natural=800 errors=556
+3241.4s	109	test: n=1900 natural=1500 errors=717
+3253.8s	110	
+3253.8s	111	XCS: CICIDS2018
+3597.1s	112	val: n=1200 natural=800 errors=474
+4139.9s	113	test: n=1900 natural=1500 errors=561
+4152.3s	114	
+4152.3s	115	dataset          score  n_errors   auroc  auroc_minus_conf  \
+4152.3s	116	0   CICIDS2017     confidence       381  0.9806               NaN
+4152.3s	117	1   CICIDS2017         margin       381  0.9802           -0.0005
+4152.3s	118	2   CICIDS2017  1-instability       381  0.5519           -0.4287
+4152.3s	119	3   CICIDS2017        jaccard       381  0.6049           -0.3757
+4152.3s	120	4   CICIDS2017      xcs_fixed       381  0.8533           -0.1273
+4152.3s	121	5   CICIDS2017    xcs_learned       381  0.9535           -0.0272
+4152.3s	122	6     UNSWNB15     confidence       717  0.8494               NaN
+4152.3s	123	7     UNSWNB15         margin       717  0.8477           -0.0017
+4152.3s	124	8     UNSWNB15  1-instability       717  0.7063           -0.1431
+4152.3s	125	9     UNSWNB15        jaccard       717  0.6033           -0.2461
+4152.3s	126	10    UNSWNB15      xcs_fixed       717  0.8174           -0.0320
+4152.3s	127	11    UNSWNB15    xcs_learned       717  0.8490           -0.0004
+4152.3s	128	12  CICIDS2018     confidence       561  0.8674               NaN
+4152.3s	129	13  CICIDS2018         margin       561  0.8677            0.0003
+4152.3s	130	14  CICIDS2018  1-instability       561  0.7127           -0.1546
+4152.3s	131	15  CICIDS2018        jaccard       561  0.4490           -0.4183
+4152.3s	132	16  CICIDS2018      xcs_fixed       561  0.8182           -0.0492
+4152.3s	133	17  CICIDS2018    xcs_learned       561  0.8622           -0.0052
+4152.3s	134	
+4152.3s	135	aurc_natural
+4152.3s	136	0         0.0002
+4152.3s	137	1         0.0002
+4152.3s	138	2         0.0051
+4152.3s	139	3         0.0054
+4152.3s	140	4         0.0016
+4152.3s	141	5         0.0002
+4152.3s	142	6         0.0590
+4152.3s	143	7         0.0595
+4152.3s	144	8         0.1094
+4152.3s	145	9         0.1470
+4152.3s	146	10        0.0700
+4152.3s	147	11        0.0597
+4152.3s	148	12        0.0207
+4152.3s	149	13        0.0207
+4152.3s	150	14        0.0470
+4152.3s	151	15        0.1088
+4152.3s	152	16        0.0279
+4152.3s	153	17        0.0212
+4152.5s	154	
+4152.5s	155	Done. Outputs in /kaggle/working/xai_ids_revised
+4154.1s	156	/kaggle/working/xai_ids_revised_results.zip
+4162.4s	157	/usr/local/lib/python3.13/dist-packages/mistune.py:435: SyntaxWarning: invalid escape sequence '\|'
+4162.4s	158	cells[i][c] = re.sub('\\\\\|', '|', cell)
+4162.9s	159	/usr/local/lib/python3.13/dist-packages/nbconvert/filters/filter_links.py:36: SyntaxWarning: invalid escape sequence '\_'
+4162.9s	160	text = re.sub(r'_', '\_', text) # Escape underscores in display text
+4165.2s	161	[NbConvertApp] Converting notebook __notebook__.ipynb to notebook
+4165.4s	162	[NbConvertApp] Writing 66383 bytes to __notebook__.ipynb
+4169.2s	163	[NbConvertApp] Converting notebook __notebook__.ipynb to html
+4171.0s	164	[NbConvertApp] Writing 546086 bytes to __results__.html

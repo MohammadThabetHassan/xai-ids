@@ -1,0 +1,4 @@
+dataset,rows_loaded,rows_after_dedup,label_conflicts_removed,rows_used,classes,train,val,test,rarest_class,imbalance_mode
+CIC-IDS-2017,254511,253144,38,200000,15,128000,32000,40000,Heartbleed (9),none
+UNSW-NB15,141225,74008,3622,70386,10,45046,11262,14078,Worms (156),weights
+CSE-CIC-IDS-2018,165984,133425,1923,131502,15,84160,21041,26301,FTP-BruteForce (28),smote
