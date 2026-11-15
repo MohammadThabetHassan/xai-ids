@@ -1,0 +1,16 @@
+dataset,feature,mean_abs_shap,family
+CIC-IDS-2017,Fwd Seg Size Min,0.65922827,size/volume
+CIC-IDS-2017,Flow IAT Mean,0.5759383,timing
+CIC-IDS-2017,Fwd IAT Std,0.46405566,timing
+CIC-IDS-2017,Avg Bwd Segment Size,0.44915313,size/volume
+CIC-IDS-2017,Flow Duration,0.43304938,timing
+UNSW-NB15,sbytes,0.771117,size/volume
+UNSW-NB15,dbytes,0.71282965,size/volume
+UNSW-NB15,smean,0.59461796,size/volume
+UNSW-NB15,dmean,0.5433807,size/volume
+UNSW-NB15,sload,0.31911132,rate
+CSE-CIC-IDS-2018,Init Fwd Win Byts,1.1937647,tcp flags/window
+CSE-CIC-IDS-2018,Fwd Seg Size Min,1.0184064,size/volume
+CSE-CIC-IDS-2018,Flow Duration,0.47372204,timing
+CSE-CIC-IDS-2018,Flow IAT Max,0.41343686,timing
+CSE-CIC-IDS-2018,Fwd Act Data Pkts,0.41101882,count

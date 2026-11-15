@@ -1,5 +1,7 @@
 # Re-run plan
 
+> **Status: completed on 15 Nov 2026** (Kaggle notebook `omaralraas/xai-ids-corrected-rerun`, version 2, commit `4a56e29`). Results are in [`results/`](../results/README.md). The steps below remain valid for reproducing them.
+
 ## 1. Kaggle setup
 1. Create a new Kaggle notebook (Python). In the right-hand **Settings** panel, turn **Internet on**. GPU is optional: training uses it, but SHAP, LIME and the latency timings run on CPU.
 2. Attach these datasets with **Add data**:
