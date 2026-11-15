@@ -52,7 +52,7 @@ USE_UNSWNB15   = True
 USE_CICIDS2018 = True
 
 MAX_PER_DATASET = {'CICIDS2017': 200_000, 'UNSWNB15': 145_000, 'CICIDS2018': 200_000}
-ROWS_PER_CSV    = {'CICIDS2017': 25_000, 'UNSWNB15': 50_000, 'CICIDS2018': 20_000}
+ROWS_PER_FILE   = {'CICIDS2017': 50_000, 'UNSWNB15': 145_000, 'CICIDS2018': 20_000}  # split evenly across the labels in each file
 MIN_CLASS_COUNT = 10        # classes with fewer cleaned rows are dropped (logged)
 
 TOP_K_FEATURES = 20
@@ -143,27 +143,33 @@ def _strip_ids(df, label_col):
     return df.drop(columns=drop)
 
 
-def load_parquet_files(directory, max_total, label_cands):
+def load_parquet_files(directory, rows_per_file, label_cands):
+    """Per-file, per-label sampling, as for CSVs. Uniform per-file sampling left
+    classes such as Infiltration (36 rows in a ~288k-row file) with a handful of rows."""
     files = sorted(directory.rglob('*.parquet'))
     print(' ', len(files), 'parquet files')
-    n_per = max(1, max_total // len(files))
     dfs = []
     for f in files:
         df = pd.read_parquet(f)
         df.columns = df.columns.str.strip()
         label_col = next((c for c in label_cands if c in df.columns), None)
         df = _strip_ids(df, label_col)
-        if len(df) > n_per:
-            df = df.sample(n=n_per, random_state=RANDOM_STATE)
+        lab = df[label_col].astype(str).str.strip()
+        per_cls = max(50, rows_per_file // max(1, lab.nunique()))
+        counts = lab.value_counts().to_dict()
+        df = df.assign(**{label_col: lab}).sample(frac=1, random_state=RANDOM_STATE)
+        df = df.groupby(label_col).head(per_cls).reset_index(drop=True)
         dfs.append(df)
-        print('   sampled', f.name, ':', len(df))
+        print('   sampled', f.name, ':', len(df), '| labels:', dict(sorted(counts.items())))
     return dfs
 
 
 def load_csv_files_stratified(directory, rows_per_file, label_cands):
     """Per-file, per-label sampling. IDs are removed per file so that files with
     extra identifier columns (CIC-2018 Tuesday-20-02) no longer turn every other
-    file's rows into NaN after concatenation — the cause of the 2-class result."""
+    file's rows into NaN after concatenation — the cause of the 2-class result.
+    Labels are counted in a first pass and rows are sampled while reading, so a
+    multi-GB file is never held in memory in full."""
     files = sorted(directory.rglob('*.csv'))
     print(' ', len(files), 'CSV files')
     dfs = []
@@ -174,39 +180,45 @@ def load_csv_files_stratified(directory, rows_per_file, label_cands):
         except UnicodeDecodeError:
             enc = 'latin-1'
             head = pd.read_csv(f, nrows=5, low_memory=False, encoding=enc)
+        raw_cols = list(head.columns)
         head.columns = head.columns.str.strip()
         label_col = next((c for c in label_cands if c in head.columns), None)
         if label_col is None:
             print('   skip', f.name, '(no label)')
             continue
-        buckets = {}
-        for chunk in pd.read_csv(f, encoding=enc, low_memory=False, chunksize=100_000):
+        raw_label = raw_cols[list(head.columns).index(label_col)]
+
+        counts = Counter()
+        for chunk in pd.read_csv(f, encoding=enc, usecols=[raw_label], dtype=str, chunksize=1_000_000):
+            lab = chunk[raw_label].str.strip()
+            counts.update(lab[lab != label_col].value_counts().to_dict())
+        if not counts:
+            continue
+        per_cls = max(50, rows_per_file // len(counts))
+        keep_p = {lbl: min(1.0, 2.0 * per_cls / n) for lbl, n in counts.items()}
+
+        rng = np.random.RandomState(RANDOM_STATE)
+        parts = []
+        for chunk in pd.read_csv(f, encoding=enc, low_memory=False, chunksize=200_000):
             chunk = _strip_ids(chunk, label_col)
             lab = chunk[label_col].astype(str).str.strip()
-            chunk = chunk[lab != label_col]            # repeated header rows inside CIC-2018 files
-            for lbl, grp in chunk.groupby(chunk[label_col].astype(str).str.strip()):
-                buckets.setdefault(lbl, []).append(grp)
-        per_cls = max(50, rows_per_file // max(1, len(buckets)))
-        sampled = []
-        for lbl, parts in buckets.items():
-            full = pd.concat(parts, ignore_index=True)
-            sampled.append(full.sample(n=min(per_cls, len(full)), random_state=RANDOM_STATE))
-        if sampled:
-            df = pd.concat(sampled, ignore_index=True)
-            if label_col != 'Label':
-                df = df.rename(columns={label_col: 'Label'})
-            dfs.append(df)
-            print('   sampled', f.name, ':', len(df), '| labels:', sorted(buckets))
+            keep = (lab != label_col).values & (rng.random_sample(len(chunk)) < lab.map(keep_p).fillna(0).values)
+            parts.append(chunk[keep].assign(**{label_col: lab[keep].values}))
+        df = pd.concat(parts, ignore_index=True)
+        df = df.sample(frac=1, random_state=RANDOM_STATE).groupby(label_col).head(per_cls)
+        if label_col != 'Label':
+            df = df.rename(columns={label_col: 'Label'})
+        dfs.append(df.reset_index(drop=True))
+        print('   sampled', f.name, ':', len(df), '| labels:', dict(sorted(counts.items())))
     return dfs
-
 
 def load_and_clean(name):
     directory = PATHS[name]
     cands = LABEL_PREFS.get(name, LABEL_CANDIDATES)
     if list(directory.rglob('*.parquet')):
-        dfs = load_parquet_files(directory, MAX_PER_DATASET[name] * 2, cands)
+        dfs = load_parquet_files(directory, ROWS_PER_FILE[name], cands)
     else:
-        dfs = load_csv_files_stratified(directory, ROWS_PER_CSV[name], cands)
+        dfs = load_csv_files_stratified(directory, ROWS_PER_FILE[name], cands)
     if not dfs:
         return None
     # Align on the columns shared by all files (logged), then concatenate.
