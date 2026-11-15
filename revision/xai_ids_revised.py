@@ -61,7 +61,11 @@ VAL_SIZE       = 0.20       # fraction of the remaining 80% → early stopping +
 RANDOM_STATE   = 42
 XGB_EPOCHS     = 300
 PATIENCE       = 20
-XGB_BALANCED_WEIGHTS = True # paper describes balanced sample weights for XGBoost
+# Class-imbalance handling: 'none', 'smote', 'weights' (balanced class/sample weights)
+# or 'both'. 'auto' picks, per dataset, the mode with the best validation macro F1
+# for XGBoost and applies it to every model; the test set is not used for the choice.
+IMBALANCE_MODE  = 'auto'
+IMBALANCE_MODES = ('none', 'smote', 'weights', 'both')
 N_BOOT         = 500        # bootstrap resamples for metric CIs
 
 # XCS
@@ -350,65 +354,84 @@ for name, ds in DATASETS.items():
     X_va = scaler.transform(X.iloc[idx_va][feats].values)
     X_te = scaler.transform(X.iloc[idx_te][feats].values)
     y_tr, y_va, y_te = y[idx_tr], y[idx_va], y[idx_te]
-    X_tr_nosmote = X_tr.copy()
-
     cc = Counter(y_tr)
     target = max(500, int(np.median(list(cc.values()))))
     strat = {c: max(v, min(target, 3000)) for c, v in cc.items() if v < target}
-    smote_info = 'not needed'
+    X_sm, y_sm, smote_info = X_tr, y_tr, 'not needed'
     if strat:
         try:
             k_nn = max(1, min(5, min(cc[c] for c in strat) - 1))
-            X_tr, y_tr = SMOTE(sampling_strategy=strat, k_neighbors=k_nn,
+            X_sm, y_sm = SMOTE(sampling_strategy=strat, k_neighbors=k_nn,
                                random_state=RANDOM_STATE).fit_resample(X_tr, y_tr)
             smote_info = {ds['le'].classes_[c]: [int(cc[c]), int(n)] for c, n in strat.items()}
         except Exception as e:
             smote_info = 'skipped: ' + str(e)
     ds.update(features=feats, scaler=scaler, class_names=list(ds['le'].classes_),
-              X_train=X_tr, y_train=y_tr, X_train_nosmote=X_tr_nosmote,
+              X_train_nosmote=X_tr, y_train_nosmote=y_tr, X_train_smote=X_sm, y_train_smote=y_sm,
               X_val=X_va, y_val=y_va, X_test=X_te, y_test=y_te,
-              split_sizes={'train': len(idx_tr), 'train_after_smote': len(y_tr),
+              split_sizes={'train': len(idx_tr), 'train_after_smote': len(y_sm),
                            'val': len(idx_va), 'test': len(idx_te)},
               smote=smote_info)
     print('  split:', ds['split_sizes'], '| features:', feats)
 
 
 # ── 3. Models (early stopping on validation, never on test) ──────────────────
-ALL_RESULTS = {}
+ALL_RESULTS, IMB_ROWS = {}, []
 for name, ds in DATASETS.items():
     print('\nTraining on', name)
-    X_tr, y_tr, X_va, y_va, X_te = ds['X_train'], ds['y_train'], ds['X_val'], ds['y_val'], ds['X_test']
+    X_va, y_va, X_te = ds['X_val'], ds['y_val'], ds['X_test']
     n_cls = len(ds['class_names'])
     objective = 'binary:logistic' if n_cls == 2 else 'multi:softprob'
     metric = 'logloss' if n_cls == 2 else 'mlogloss'
-    sw = compute_sample_weight('balanced', y_tr) if XGB_BALANCED_WEIGHTS else None
     xgb_params = dict(max_depth=8, learning_rate=0.1, subsample=0.8, colsample_bytree=0.8,
                       reg_alpha=0.1, reg_lambda=1.0, min_child_weight=3, tree_method='hist',
                       device=device, n_jobs=-1, random_state=RANDOM_STATE,
                       objective=objective, eval_metric=metric, verbosity=0)
-    models, train_time = {}, {}
 
-    t0 = time.time()
-    xgb_m = xgb.XGBClassifier(n_estimators=XGB_EPOCHS, early_stopping_rounds=PATIENCE, **xgb_params)
-    xgb_m.fit(X_tr, y_tr, sample_weight=sw, eval_set=[(X_va, y_va)], verbose=False)
-    models['XGBoost'], train_time['XGBoost'] = xgb_m, time.time() - t0
+    def train_data(mode):
+        smote = mode in ('smote', 'both')
+        X_m = ds['X_train_smote'] if smote else ds['X_train_nosmote']
+        y_m = ds['y_train_smote'] if smote else ds['y_train_nosmote']
+        return X_m, y_m, (compute_sample_weight('balanced', y_m) if mode in ('weights', 'both') else None)
+
+    # Imbalance mode: chosen on validation macro F1 of XGBoost (test set untouched).
+    candidates = IMBALANCE_MODES if IMBALANCE_MODE == 'auto' else (IMBALANCE_MODE,)
+    fitted = {}
+    for mode in candidates:
+        X_m, y_m, w_m = train_data(mode)
+        t0 = time.time()
+        m = xgb.XGBClassifier(n_estimators=XGB_EPOCHS, early_stopping_rounds=PATIENCE, **xgb_params)
+        m.fit(X_m, y_m, sample_weight=w_m, eval_set=[(X_va, y_va)], verbose=False)
+        pv = m.predict(X_va)
+        fitted[mode] = (m, time.time() - t0)
+        IMB_ROWS.append({'dataset': name, 'mode': mode, 'val_macro_f1': f1_score(y_va, pv, average='macro', zero_division=0),
+                         'val_accuracy': accuracy_score(y_va, pv), 'best_iteration': m.best_iteration})
+        print('  imbalance={:<8} val macroF1={:.4f} acc={:.4f}'.format(mode, IMB_ROWS[-1]['val_macro_f1'], IMB_ROWS[-1]['val_accuracy']))
+    mode = max(candidates, key=lambda c: next(r['val_macro_f1'] for r in IMB_ROWS if r['dataset'] == name and r['mode'] == c))
+    ds['imbalance'] = mode
+    print('  selected imbalance mode:', mode)
+    X_tr, y_tr, sw = train_data(mode)
+    cw = 'balanced' if mode in ('weights', 'both') else None
+    models, train_time = {}, {}
+    models['XGBoost'], train_time['XGBoost'] = fitted[mode]
+    xgb_m = models['XGBoost']
 
     t0 = time.time()
     rf_m = RandomForestClassifier(n_estimators=200, max_depth=20, min_samples_split=5,
-                                  class_weight='balanced', n_jobs=-1, random_state=RANDOM_STATE)
+                                  class_weight=cw, n_jobs=-1, random_state=RANDOM_STATE)
     rf_m.fit(X_tr, y_tr)
     models['RandomForest'], train_time['RandomForest'] = rf_m, time.time() - t0
 
     t0 = time.time()
     lgb_params = dict(max_depth=8, learning_rate=0.1, subsample=0.8, subsample_freq=1,
-                      colsample_bytree=0.8, class_weight='balanced', n_jobs=-1,
+                      colsample_bytree=0.8, class_weight=cw, n_jobs=-1,
                       random_state=RANDOM_STATE, verbosity=-1)
     lgb_m = lgb.LGBMClassifier(n_estimators=300, **lgb_params)
     lgb_m.fit(X_tr, y_tr, eval_set=[(X_va, y_va)], callbacks=[lgb.early_stopping(PATIENCE, verbose=False)])
     models['LightGBM'], train_time['LightGBM'] = lgb_m, time.time() - t0
 
     # Ensemble members are refit by VotingClassifier, so iteration counts are fixed
-    # to the validation-selected values. Balancing is applied once, through the
+    # to the validation-selected values. Any weighting is applied once, through the
     # shared sample weights, so RF and LightGBM members drop their class weights.
     t0 = time.time()
     xgb_fixed = xgb.XGBClassifier(n_estimators=(xgb_m.best_iteration or XGB_EPOCHS - 1) + 1, **xgb_params)
@@ -417,7 +440,7 @@ for name, ds in DATASETS.items():
     lgb_fixed = lgb.LGBMClassifier(n_estimators=max(1, lgb_m.best_iteration_ or 300),
                                    **{**lgb_params, 'class_weight': None})
     ens = VotingClassifier([('xgb', xgb_fixed), ('rf', rf_ens), ('lgb', lgb_fixed)], voting='soft', n_jobs=1)
-    ens.fit(X_tr, y_tr, sample_weight=compute_sample_weight('balanced', y_tr))
+    ens.fit(X_tr, y_tr, sample_weight=sw)
     models['Ensemble'], train_time['Ensemble'] = ens, time.time() - t0
 
     ALL_RESULTS[name] = {m: {'model': mdl, 'proba': mdl.predict_proba(X_te), 'train_s': train_time[m]}
@@ -538,6 +561,7 @@ for name, ds in DATASETS.items():
     plt.tight_layout(); plt.savefig(OUT / 'plots' / f'reliability_{name}.png', dpi=200); plt.close()
 
 pd.DataFrame(rows).to_csv(OUT / 'tables' / 'model_comparison.csv', index=False)
+pd.DataFrame(IMB_ROWS).to_csv(OUT / 'tables' / 'imbalance_selection.csv', index=False)
 pd.DataFrame(mcn_rows).to_csv(OUT / 'tables' / 'mcnemar.csv', index=False)
 print('\n', pd.DataFrame(rows)[['dataset', 'model', 'accuracy', 'f1_weighted', 'f1_macro', 'ece']].round(4))
 
@@ -805,11 +829,12 @@ print('\n', pd.DataFrame(xcs_eval_rows)[['dataset', 'score', 'n_errors', 'auroc'
 summary = {'config': {'max_per_dataset': MAX_PER_DATASET, 'test_size': TEST_SIZE, 'val_size': VAL_SIZE,
                       'top_k_features': TOP_K_FEATURES, 'xcs_weights': XCS_W, 'xcs_neighbours': XCS_NEIGHBOURS,
                       'xcs_noise_std': XCS_NOISE_STD, 'lime_samples': LIME_SAMPLES, 'seed': RANDOM_STATE,
-                      'smoke_test': SMOKE,
+                      'smoke_test': SMOKE, 'imbalance_mode': IMBALANCE_MODE,
                       'versions': {'xgboost': xgb.__version__, 'lightgbm': lgb.__version__,
                                    'shap': shap.__version__, 'numpy': np.__version__}},
            'datasets': {n: {'path': PATHS.get(n), 'cleaning': ds['log'], 'split': ds['split_sizes'],
-                            'smote': ds['smote'], 'classes': ds['class_names'], 'features': ds['features']}
+                            'smote': ds['smote'], 'imbalance_mode': ds['imbalance'],
+                            'classes': ds['class_names'], 'features': ds['features']}
                         for n, ds in DATASETS.items()},
            'xcs': xcs_summary}
 save_json(summary, OUT / 'summary.json')
