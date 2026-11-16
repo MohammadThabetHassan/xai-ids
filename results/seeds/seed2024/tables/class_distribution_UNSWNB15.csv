@@ -1,0 +1,11 @@
+class,count
+Normal,25847
+Exploits,15357
+Fuzzers,14328
+Reconnaissance,6951
+DoS,3553
+Generic,2228
+Shellcode,1156
+Analysis,441
+Backdoor,350
+Worms,153

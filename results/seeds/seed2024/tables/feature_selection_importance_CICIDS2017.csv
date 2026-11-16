@@ -1,0 +1,31 @@
+,mean_abs_shap
+Fwd Seg Size Min,0.96469575
+Flow IAT Mean,0.60356283
+Avg Bwd Segment Size,0.49796948
+Fwd IAT Std,0.48790452
+Packet Length Max,0.45961237
+Flow IAT Max,0.436785
+Fwd Header Length,0.37001616
+Fwd IAT Total,0.36782852
+Fwd IAT Max,0.36764684
+Flow IAT Std,0.33491156
+Avg Packet Size,0.30885598
+Bwd Packets Length Total,0.27399904
+Packet Length Mean,0.2704496
+Bwd Packet Length Std,0.2556533
+Packet Length Std,0.23870347
+Bwd IAT Mean,0.23412912
+Bwd Packet Length Max,0.19595838
+Protocol,0.13392083
+Subflow Fwd Packets,0.1252787
+Idle Min,0.06555973
+Active Max,0.055358898
+Idle Max,0.05510212
+Active Min,0.04990339
+Active Mean,0.027239965
+FIN Flag Count,0.020378666
+Idle Mean,0.019454641
+Bwd Packet Length Mean,0.0
+Packet Length Variance,0.0
+Subflow Bwd Bytes,0.0
+Total Fwd Packets,0.0

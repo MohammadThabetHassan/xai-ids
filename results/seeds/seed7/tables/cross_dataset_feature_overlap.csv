@@ -1,0 +1,4 @@
+a,b,top10_jaccard_harmonised,shared,note
+CICIDS2017,UNSWNB15,0.0,[],UNSW-NB15 uses a different feature schema; name overlap is not meaningful
+CICIDS2017,CICIDS2018,0.17647058823529413,"['duration flow', 'flow iat max', 'flow iat std']",
+UNSWNB15,CICIDS2018,0.0,[],UNSW-NB15 uses a different feature schema; name overlap is not meaningful

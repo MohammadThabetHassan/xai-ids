@@ -1,0 +1,55 @@
+device: cpu | OUT: /kaggle/working/xai_ids_v3/temporal2018 | seed: 42 | split: temporal
+
+Loading CICIDS2018
+  10 CSV files
+   sampled 02-14-2018.csv : 19998 | labels: {'Benign': 667626, 'FTP-BruteForce': 193360, 'SSH-Bruteforce': 187589}
+   sampled 02-15-2018.csv : 19998 | labels: {'Benign': 996077, 'DoS attacks-GoldenEye': 41508, 'DoS attacks-Slowloris': 10990}
+   sampled 02-16-2018.csv : 19998 | labels: {'Benign': 446772, 'DoS attacks-Hulk': 461912, 'DoS attacks-SlowHTTPTest': 139890}
+   sampled 02-20-2018.csv : 20000 | labels: {'Benign': 7372557, 'DDoS attacks-LOIC-HTTP': 576191}
+   sampled 02-21-2018.csv : 15062 | labels: {'Benign': 360833, 'DDOS attack-HOIC': 686012, 'DDOS attack-LOIC-UDP': 1730}
+   sampled 02-22-2018.csv : 5362 | labels: {'Benign': 1048213, 'Brute Force -Web': 249, 'Brute Force -XSS': 79, 'SQL Injection': 34}
+   sampled 02-23-2018.csv : 5566 | labels: {'Benign': 1048009, 'Brute Force -Web': 362, 'Brute Force -XSS': 151, 'SQL Injection': 53}
+   sampled 02-28-2018.csv : 20000 | labels: {'Benign': 544200, 'Infilteration': 68871}
+   sampled 03-01-2018.csv : 20000 | labels: {'Benign': 238037, 'Infilteration': 93063}
+   sampled 03-02-2018.csv : 20000 | labels: {'Benign': 762384, 'Bot': 286191}
+  cleaning log: {'raw_rows': 165984, 'after_nan_inf': 165322, 'after_dedup': 133425, 'label_conflict_rows': 1923, 'rare_classes_dropped': {}, 'final_rows': 131502}
+  classes: 15 ['Benign', 'Bot', 'Brute Force -Web', 'Brute Force -XSS', 'DDOS attack-HOIC', 'DDOS attack-LOIC-UDP', 'DDoS attacks-LOIC-HTTP', 'DoS attacks-GoldenEye', 'DoS attacks-Hulk', 'DoS attacks-SlowHTTPTest', 'DoS attacks-Slowloris', 'FTP-BruteForce', 'Infilteration', 'SQL Injection', 'SSH-Bruteforce']
+
+Preparing CICIDS2018
+  split: {'train': 84161, 'train_after_smote': 101321, 'val': 21040, 'test': 26301} | features: ['Fwd Seg Size Min', 'Init Fwd Win Byts', 'Fwd Act Data Pkts', 'Flow Duration', 'Fwd Pkt Len Max', 'Flow IAT Max', 'Fwd Pkt Len Mean', 'Fwd IAT Mean', 'Subflow Fwd Byts', 'Fwd IAT Tot', 'Fwd IAT Max', 'Fwd IAT Std', 'Flow IAT Std', 'Fwd Header Len', 'ECE Flag Cnt', 'Bwd IAT Min', 'Bwd IAT Std', 'Bwd IAT Mean', 'Bwd IAT Max', 'ACK Flag Cnt']
+
+Training on CICIDS2018
+  imbalance=none     val macroF1=0.8662 acc=0.8896
+  imbalance=smote    val macroF1=0.8014 acc=0.8891
+  imbalance=weights  val macroF1=0.8178 acc=0.7529
+  imbalance=both     val macroF1=0.7851 acc=0.7536
+  selected imbalance mode: none
+  XGBoost       acc=0.8784 macroF1=0.7950 (16s)
+  RandomForest  acc=0.8674 macroF1=0.7635 (22s)
+  LightGBM      acc=0.8660 macroF1=0.7010 (3s)
+  Ensemble      acc=0.8783 macroF1=0.7773 (35s)
+
+       dataset         model  accuracy  f1_weighted  f1_macro     ece
+0  CICIDS2018       XGBoost    0.8784       0.8526    0.7950  0.0106
+1  CICIDS2018  RandomForest    0.8674       0.8417    0.7635  0.0105
+2  CICIDS2018      LightGBM    0.8660       0.8257    0.7010  0.1039
+3  CICIDS2018      Ensemble    0.8783       0.8469    0.7773  0.0432
+
+XCS: CICIDS2018
+  val: n=1200 natural=800 errors=476
+  test: n=1900 natural=1500 errors=579
+
+       dataset               score  ...  auroc_minus_conf  aurc_natural
+0  CICIDS2018          confidence  ...               NaN        0.0255
+1  CICIDS2018              margin  ...           -0.0005        0.0256
+2  CICIDS2018         neg_entropy  ...            0.0020        0.0247
+3  CICIDS2018         trust_score  ...           -0.0988        0.0423
+4  CICIDS2018       1-instability  ...           -0.1657        0.0672
+5  CICIDS2018             jaccard  ...           -0.4647        0.1391
+6  CICIDS2018           xcs_fixed  ...           -0.1022        0.0461
+7  CICIDS2018         xcs_learned  ...           -0.0040        0.0266
+8  CICIDS2018  conf_trust_learned  ...           -0.0076        0.0262
+
+[9 rows x 6 columns]
+
+Done. Outputs in /kaggle/working/xai_ids_v3/temporal2018

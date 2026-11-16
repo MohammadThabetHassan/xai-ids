@@ -1,0 +1,31 @@
+,mean_abs_shap
+Fwd Seg Size Min,1.1002252
+Init Fwd Win Byts,1.0926661
+Fwd Act Data Pkts,0.45293215
+Flow Duration,0.39051798
+Fwd Pkt Len Max,0.3636192
+Flow IAT Max,0.32556978
+Fwd Pkt Len Mean,0.26074618
+Fwd IAT Mean,0.25174662
+Subflow Fwd Byts,0.21059687
+Fwd IAT Tot,0.19627838
+Fwd IAT Max,0.19299783
+Fwd IAT Std,0.18912749
+Flow IAT Std,0.17490694
+Fwd Header Len,0.1558904
+ECE Flag Cnt,0.13809197
+Bwd IAT Min,0.09161325
+Bwd IAT Std,0.08401737
+Bwd IAT Mean,0.06878614
+Bwd IAT Max,0.043716136
+ACK Flag Cnt,0.034842286
+Bwd IAT Tot,0.033829298
+Subflow Fwd Pkts,0.025905322
+Idle Std,0.022709498
+Idle Mean,0.021679232
+Idle Max,0.01396829
+Protocol,0.00032175836
+Fwd Seg Size Avg,0.0
+RST Flag Cnt,0.0
+Tot Fwd Pkts,0.0
+TotLen Fwd Pkts,0.0

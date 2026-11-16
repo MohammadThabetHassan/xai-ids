@@ -1,0 +1,21 @@
+feature,mean_abs_shap,family
+Flow IAT Mean,0.55261755,timing
+Fwd Packets Length Total,0.5210961,size/volume
+Avg Bwd Segment Size,0.46804193,size/volume
+Packet Length Max,0.46605104,size/volume
+Fwd IAT Std,0.41709226,timing
+Avg Packet Size,0.402447,size/volume
+Fwd IAT Total,0.37162936,timing
+Flow IAT Max,0.35474548,timing
+Flow Duration,0.3406671,timing
+Flow IAT Std,0.3113815,timing
+Fwd IAT Max,0.25611424,timing
+PSH Flag Count,0.22211565,tcp flags/window
+Bwd Packet Length Max,0.2028187,size/volume
+Packet Length Std,0.18812646,size/volume
+Bwd Packet Length Std,0.18701008,size/volume
+Packet Length Mean,0.18669221,size/volume
+Bwd IAT Max,0.1603784,timing
+Bwd IAT Mean,0.14607267,timing
+Idle Min,0.11726227,timing
+Protocol,0.08675842,other

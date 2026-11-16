@@ -1,0 +1,157 @@
+{
+  "config": {
+    "max_per_dataset": {
+      "CICIDS2017": 200000,
+      "UNSWNB15": 145000,
+      "CICIDS2018": 200000
+    },
+    "test_size": 0.2,
+    "val_size": 0.2,
+    "top_k_features": 20,
+    "xcs_weights": [
+      0.4,
+      0.3,
+      0.3
+    ],
+    "xcs_neighbours": 5,
+    "xcs_noise_std": 0.05,
+    "lime_samples": 1000,
+    "seed": 42,
+    "smoke_test": false,
+    "imbalance_mode": "auto",
+    "split_mode": "temporal",
+    "sensitivity": false,
+    "versions": {
+      "xgboost": "3.4.1",
+      "lightgbm": "4.6.0",
+      "shap": "0.54.1",
+      "numpy": "2.1.3"
+    }
+  },
+  "datasets": {
+    "CICIDS2018": {
+      "path": "/kaggle/input/datasets/solarmainframe/ids-intrusion-csv",
+      "cleaning": {
+        "raw_rows": 165984,
+        "after_nan_inf": 165322,
+        "after_dedup": 133425,
+        "label_conflict_rows": 1923,
+        "zero_var_dropped": [
+          "Bwd Blk Rate Avg",
+          "Bwd Byts/b Avg",
+          "Bwd PSH Flags",
+          "Bwd Pkts/b Avg",
+          "Bwd URG Flags",
+          "Fwd Blk Rate Avg",
+          "Fwd Byts/b Avg",
+          "Fwd Pkts/b Avg"
+        ],
+        "rare_classes_dropped": {},
+        "final_rows": 131502
+      },
+      "split": {
+        "train": 84161,
+        "train_after_smote": 101321,
+        "val": 21040,
+        "test": 26301
+      },
+      "smote": {
+        "SSH-Bruteforce": [
+          2147,
+          3000
+        ],
+        "FTP-BruteForce": [
+          18,
+          3000
+        ],
+        "DoS attacks-SlowHTTPTest": [
+          22,
+          3000
+        ],
+        "DDOS attack-LOIC-UDP": [
+          1107,
+          3000
+        ],
+        "Brute Force -Web": [
+          352,
+          3000
+        ],
+        "Brute Force -XSS": [
+          145,
+          3000
+        ],
+        "SQL Injection": [
+          49,
+          3000
+        ]
+      },
+      "imbalance_mode": "none",
+      "classes": [
+        "Benign",
+        "Bot",
+        "Brute Force -Web",
+        "Brute Force -XSS",
+        "DDOS attack-HOIC",
+        "DDOS attack-LOIC-UDP",
+        "DDoS attacks-LOIC-HTTP",
+        "DoS attacks-GoldenEye",
+        "DoS attacks-Hulk",
+        "DoS attacks-SlowHTTPTest",
+        "DoS attacks-Slowloris",
+        "FTP-BruteForce",
+        "Infilteration",
+        "SQL Injection",
+        "SSH-Bruteforce"
+      ],
+      "features": [
+        "Fwd Seg Size Min",
+        "Init Fwd Win Byts",
+        "Fwd Act Data Pkts",
+        "Flow Duration",
+        "Fwd Pkt Len Max",
+        "Flow IAT Max",
+        "Fwd Pkt Len Mean",
+        "Fwd IAT Mean",
+        "Subflow Fwd Byts",
+        "Fwd IAT Tot",
+        "Fwd IAT Max",
+        "Fwd IAT Std",
+        "Flow IAT Std",
+        "Fwd Header Len",
+        "ECE Flag Cnt",
+        "Bwd IAT Min",
+        "Bwd IAT Std",
+        "Bwd IAT Mean",
+        "Bwd IAT Max",
+        "ACK Flag Cnt"
+      ]
+    }
+  },
+  "xcs": {
+    "CICIDS2018": {
+      "learned_lr_coefficients_standardised": {
+        "confidence": 1.6172,
+        "instability": -0.2637,
+        "jaccard": -0.0203
+      },
+      "thresholds": {
+        "fixed_0.3": {
+          "threshold": 0.3,
+          "flag_rate_natural": 0.0,
+          "error_recall": 0.0,
+          "flag_precision_natural": NaN
+        },
+        "val_youden": {
+          "threshold": 0.6361652254986583,
+          "flag_rate_natural": 0.36866666666666664,
+          "error_recall": 0.7063903281519862,
+          "flag_precision_natural": 0.244122965641953
+        }
+      },
+      "n_val": 1200,
+      "n_test": 1900,
+      "test_errors": 579,
+      "natural_error_rate": 0.11933333333333333
+    }
+  }
+}
