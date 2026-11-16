@@ -58,7 +58,7 @@ MIN_CLASS_COUNT = 10        # classes with fewer cleaned rows are dropped (logge
 TOP_K_FEATURES = 20
 TEST_SIZE      = 0.20       # held-out test, touched only for final reporting
 VAL_SIZE       = 0.20       # fraction of the remaining 80% → early stopping + XCS calibration
-RANDOM_STATE   = 42
+RANDOM_STATE   = int(os.environ.get('XAI_IDS_SEED', 42))   # also drives sampling and splits
 XGB_EPOCHS     = 300
 PATIENCE       = 20
 # Class-imbalance handling: 'none', 'smote', 'weights' (balanced class/sample weights)
@@ -78,10 +78,29 @@ LIME_SAMPLES   = 1000
 XCS_N_RANDOM   = {'val': 800, 'test': 1500}   # natural-distribution samples
 XCS_MAX_ERRORS = 400                          # extra misclassified samples per split
 
+# Split: 'random' (stratified) or 'temporal'. The temporal split needs flow timestamps,
+# which only the CSE-CIC-IDS-2018 CSVs carry: within each (file, label) group the
+# earliest 64% of flows train, the next 16% validate and the latest 20% test.
+SPLIT_MODE = os.environ.get('XAI_IDS_SPLIT', 'random')
+ONLY_DATASETS = [d for d in os.environ.get('XAI_IDS_DATASETS', '').split(',') if d]
+if SPLIT_MODE == 'temporal' and not ONLY_DATASETS:
+    ONLY_DATASETS = ['CICIDS2018']
+
+# Baselines: trust score (Jiang et al., 2018) on the scaled training data
+TRUST_K, TRUST_ALPHA, TRUST_MAX_PER_CLASS = 10, 0.05, 5000
+
+# Sensitivity of the XCS components to their settings (one-at-a-time around the defaults)
+SENSITIVITY  = os.environ.get('XAI_IDS_SENS') == '1'
+SENS_SIGMAS  = (0.01, 0.05, 0.2)
+SENS_TOPK    = (3, 5, 10)
+SENS_LIME    = (500, 1000, 2000)
+SENS_N       = {'natural': 400, 'errors': 200}
+
 if SMOKE:
     MAX_PER_DATASET = {k: 6000 for k in MAX_PER_DATASET}
     XGB_EPOCHS, N_BOOT, LIME_SAMPLES = 60, 50, 200
     XCS_N_RANDOM, XCS_MAX_ERRORS = {'val': 60, 'test': 80}, 30
+    SENS_LIME, SENS_N = (100, 200, 400), {'natural': 30, 'errors': 20}
 
 # Identifier / leakage-prone columns removed per file *before* concatenation.
 # Ports are dropped in every dataset (shortcut features; CIC-2018 previously kept
@@ -120,13 +139,15 @@ PATHS = {
 }
 LABEL_PREFS = {'UNSWNB15': ['attack_cat', 'Label', 'label', 'label_val', 'Attack']}
 USE = {'CICIDS2017': USE_CICIDS2017, 'UNSWNB15': USE_UNSWNB15, 'CICIDS2018': USE_CICIDS2018}
+if ONLY_DATASETS:
+    USE = {k: v and k in ONLY_DATASETS for k, v in USE.items()}
 
 try:
     import torch
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 except Exception:
     device = 'cpu'
-print('device:', device, '| OUT:', OUT)
+print('device:', device, '| OUT:', OUT, '| seed:', RANDOM_STATE, '| split:', SPLIT_MODE)
 
 
 def save_json(obj, path):
@@ -204,7 +225,17 @@ def load_csv_files_stratified(directory, rows_per_file, label_cands):
         rng = np.random.RandomState(RANDOM_STATE)
         parts = []
         for chunk in pd.read_csv(f, encoding=enc, low_memory=False, chunksize=200_000):
+            ts = None
+            if SPLIT_MODE == 'temporal':
+                tcol = next((c for c in chunk.columns if c.strip() == 'Timestamp'), None)
+                if tcol is not None:
+                    ts = pd.to_datetime(chunk[tcol], format='%d/%m/%Y %H:%M:%S', errors='coerce')
+                    if ts.isna().mean() > 0.5:      # another format in this file
+                        ts = pd.to_datetime(chunk[tcol], dayfirst=True, errors='coerce')
             chunk = _strip_ids(chunk, label_col)
+            if ts is not None:      # ordering keys only; removed from the features in clean_dataset
+                chunk['_ts'] = (ts - pd.Timestamp('1970-01-01')).dt.total_seconds().values
+                chunk['_src'] = len(dfs)
             lab = chunk[label_col].astype(str).str.strip()
             keep = (lab != label_col).values & (rng.random_sample(len(chunk)) < lab.map(keep_p).fillna(0).values)
             parts.append(chunk[keep].assign(**{label_col: lab[keep].values}))
@@ -238,6 +269,13 @@ def load_and_clean(name):
 
 def clean_dataset(raw, name):
     log = {'raw_rows': len(raw)}
+    raw = raw.reset_index(drop=True)
+    meta = raw[['_ts', '_src']].astype(float) if {'_ts', '_src'} <= set(raw.columns) else None
+    if meta is not None:
+        has_ts = meta['_ts'].notna().values
+        raw, meta = raw[has_ts].reset_index(drop=True), meta[has_ts].reset_index(drop=True)
+        raw = raw.drop(columns=['_ts', '_src'])
+    pos = np.arange(len(raw))            # original row positions, tracked through every filter
     y_raw = raw['Label'].astype(str).str.strip()
     X = raw.drop(columns=['Label'] + [c for c in NON_FEATURE_COLS if c in raw.columns])
     for col in X.columns:
@@ -246,16 +284,16 @@ def clean_dataset(raw, name):
     X = X.select_dtypes(include=[np.number]).astype(np.float64)
     X = X.replace([np.inf, -np.inf], np.nan)
     ok = X.notna().all(axis=1).values
-    X, y_raw = X[ok].reset_index(drop=True), y_raw[ok].reset_index(drop=True)
+    X, y_raw, pos = X[ok].reset_index(drop=True), y_raw[ok].reset_index(drop=True), pos[ok]
     log['after_nan_inf'] = len(X)
 
     both = X.assign(_y=y_raw.values)
     dup = both.duplicated()
-    X, y_raw = X[~dup].reset_index(drop=True), y_raw[~dup].reset_index(drop=True)
+    X, y_raw, pos = X[~dup].reset_index(drop=True), y_raw[~dup].reset_index(drop=True), pos[~dup.values]
     log['after_dedup'] = len(X)
     conflict = X.duplicated(keep=False)                 # same features, different labels
     log['label_conflict_rows'] = int(conflict.sum())
-    X, y_raw = X[~conflict].reset_index(drop=True), y_raw[~conflict].reset_index(drop=True)
+    X, y_raw, pos = X[~conflict].reset_index(drop=True), y_raw[~conflict].reset_index(drop=True), pos[~conflict.values]
 
     zero_var = X.columns[X.std() == 0].tolist()
     X = X.drop(columns=zero_var)
@@ -265,14 +303,14 @@ def clean_dataset(raw, name):
     rare = counts[counts < MIN_CLASS_COUNT].index.tolist()
     if rare:
         keep = ~y_raw.isin(rare)
-        X, y_raw = X[keep].reset_index(drop=True), y_raw[keep].reset_index(drop=True)
+        X, y_raw, pos = X[keep].reset_index(drop=True), y_raw[keep].reset_index(drop=True), pos[keep.values]
     log['rare_classes_dropped'] = {str(k): int(counts[k]) for k in rare}
 
     cap = MAX_PER_DATASET[name]
     if len(X) > cap:
         idx, _ = train_test_split(np.arange(len(X)), train_size=cap,
                                   stratify=y_raw, random_state=RANDOM_STATE)
-        X, y_raw = X.iloc[idx].reset_index(drop=True), y_raw.iloc[idx].reset_index(drop=True)
+        X, y_raw, pos = X.iloc[idx].reset_index(drop=True), y_raw.iloc[idx].reset_index(drop=True), pos[idx]
     log['final_rows'] = len(X)
 
     le = LabelEncoder()
@@ -281,7 +319,9 @@ def clean_dataset(raw, name):
     dist.to_csv(OUT / 'tables' / f'class_distribution_{name}.csv', index=False)
     print('  cleaning log:', {k: v for k, v in log.items() if k != 'zero_var_dropped'})
     print('  classes:', len(le.classes_), list(le.classes_))
-    return {'X': X, 'y': y, 'le': le, 'log': log}
+    return {'X': X, 'y': y, 'le': le, 'log': log,
+            'ts': meta['_ts'].values[pos] if meta is not None else None,
+            'src': meta['_src'].values[pos] if meta is not None else None}
 
 
 def make_smoke_dataset(name, seed):
@@ -300,6 +340,8 @@ def make_smoke_dataset(name, seed):
         cols[:4] = ['Fwd Packet Length Max', 'Flow IAT Min', 'Total Fwd Packets', 'Avg Packet Size']
     raw = pd.DataFrame(Xa, columns=cols)
     raw['Label'] = [f'class_{c}' for c in ya]
+    if SPLIT_MODE == 'temporal':
+        raw['_ts'], raw['_src'] = np.random.RandomState(seed).rand(len(raw)) * 1e5, 0
     return clean_dataset(raw, name)
 
 
@@ -339,13 +381,32 @@ def select_features(X_tr, y_tr, k):
     return imp.head(k).index.tolist(), imp
 
 
+def temporal_split(y, ts, src):
+    """Chronological split within each (file, label) group: earliest flows train, latest
+    test. Attack classes occur in short sessions on single days, so a split by day would
+    leave classes unseen in training; this keeps every class while testing on later flows."""
+    tr_frac = (1 - TEST_SIZE) * (1 - VAL_SIZE)
+    part = {'train': [], 'val': [], 'test': []}
+    g = pd.DataFrame({'y': y, 'ts': ts, 'src': src, 'i': np.arange(len(y))})
+    for _, grp in g.groupby(['src', 'y']):
+        i = grp.sort_values('ts', kind='stable')['i'].values
+        a, b = max(1, int(round(len(i) * tr_frac))), int(round(len(i) * (1 - TEST_SIZE)))
+        part['train'].append(i[:a]); part['val'].append(i[a:max(a, b)]); part['test'].append(i[max(a, b):])
+    return tuple(np.sort(np.concatenate(part[k])) for k in ('train', 'val', 'test'))
+
+
 for name, ds in DATASETS.items():
     print('\nPreparing', name)
     X, y = ds['X'], ds['y']
-    idx_trv, idx_te = train_test_split(np.arange(len(X)), test_size=TEST_SIZE,
-                                       stratify=y, random_state=RANDOM_STATE)
-    idx_tr, idx_va = train_test_split(idx_trv, test_size=VAL_SIZE,
-                                      stratify=y[idx_trv], random_state=RANDOM_STATE)
+    if SPLIT_MODE == 'temporal':
+        if ds.get('ts') is None:
+            raise RuntimeError(name + ' has no timestamps; the temporal split needs the CSE-CIC-IDS-2018 CSVs')
+        idx_tr, idx_va, idx_te = temporal_split(y, ds['ts'], ds['src'])
+    else:
+        idx_trv, idx_te = train_test_split(np.arange(len(X)), test_size=TEST_SIZE,
+                                           stratify=y, random_state=RANDOM_STATE)
+        idx_tr, idx_va = train_test_split(idx_trv, test_size=VAL_SIZE,
+                                          stratify=y[idx_trv], random_state=RANDOM_STATE)
     feats, imp = select_features(X.iloc[idx_tr].reset_index(drop=True), y[idx_tr], TOP_K_FEATURES)
     imp.to_csv(OUT / 'tables' / f'feature_selection_importance_{name}.csv', header=['mean_abs_shap'])
 
@@ -657,6 +718,7 @@ def xcs_components(model, explainer, lime_exp, X, rng):
     proba = model.predict_proba(X)
     pred = proba.argmax(1)
     srt = np.sort(proba, 1)
+    neg_entropy = (proba * np.log(np.clip(proba, 1e-12, 1))).sum(1)
     sv = explainer.shap_values(X)
     rec = []
     for i in range(len(X)):
@@ -689,9 +751,75 @@ def xcs_components(model, explainer, lime_exp, X, rng):
         shap_top = set(np.argsort(-base)[:XCS_TOPK])
         jac = len(shap_top & lime_top) / len(shap_top | lime_top) if lime_top else np.nan
         rec.append({'pred': c, 'confidence': proba[i, c], 'margin': srt[i, -1] - srt[i, -2],
+                    'neg_entropy': neg_entropy[i],
                     'instability': instab, 'instability_cv': instab_cv, 'jaccard': jac,
                     't_conf_ms': 1e3 * t_conf, 't_shap_ms': 1e3 * t_shap, 't_lime_ms': 1e3 * t_lime})
     return pd.DataFrame(rec)
+
+
+def build_trust(X_tr, y_tr, rng):
+    """Trust score of Jiang et al. (2018): per class, a KD-tree over the training points
+    after dropping the TRUST_ALPHA fraction with the largest k-NN radius (low density)."""
+    from sklearn.neighbors import KDTree
+    trees = {}
+    for c in np.unique(y_tr):
+        Xc = X_tr[y_tr == c]
+        if len(Xc) > TRUST_MAX_PER_CLASS:
+            Xc = Xc[rng.choice(len(Xc), TRUST_MAX_PER_CLASS, replace=False)]
+        if len(Xc) > 2 * TRUST_K:
+            r = KDTree(Xc).query(Xc, k=TRUST_K + 1)[0][:, -1]
+            Xc = Xc[r <= np.quantile(r, 1 - TRUST_ALPHA)]
+        trees[int(c)] = KDTree(Xc)
+    return trees
+
+
+def trust_score(trees, X, pred):
+    """Distance to the nearest other class divided by distance to the predicted class."""
+    classes = sorted(trees)
+    d = np.column_stack([trees[c].query(X, k=1)[0][:, 0] for c in classes])
+    col = np.array([classes.index(int(p)) for p in pred])
+    d_pred = d[np.arange(len(X)), col]
+    d[np.arange(len(X)), col] = np.inf
+    return d.min(1) / (d_pred + 1e-12)
+
+
+def xcs_sensitivity(model, explainer, lime_exp, X, correct, rng):
+    """AUROC of the explanation terms and the a-priori XCS when one setting is varied.
+    LIME is run once per sample count with max(SENS_TOPK) features; top-k sets are read from it."""
+    proba = model.predict_proba(X); pred = proba.argmax(1); conf = proba.max(1)
+    sv = explainer.shap_values(X)
+    inst = {s: np.zeros(len(X)) for s in SENS_SIGMAS}
+    jac = {(n, k): np.zeros(len(X)) for n in SENS_LIME for k in SENS_TOPK}
+    for i in range(len(X)):
+        c = int(pred[i]); base = np.abs(shap_for(sv, i, c))
+        for s in SENS_SIGMAS:
+            svn = explainer.shap_values(X[i] + rng.normal(0, s, (XCS_NEIGHBOURS, X.shape[1])))
+            rh = [stats.spearmanr(base, np.abs(shap_for(svn, j, c))).correlation for j in range(XCS_NEIGHBOURS)]
+            inst[s][i] = np.clip(1 - np.mean([1.0 if np.isnan(r) else r for r in rh]), 0, 1)
+        for n in SENS_LIME:
+            try:
+                e = lime_exp.explain_instance(X[i], model.predict_proba, num_features=max(SENS_TOPK),
+                                              labels=(c,), num_samples=n)
+                order = [f for f, _ in sorted(e.as_map()[c], key=lambda t: -abs(t[1]))]
+            except Exception:
+                order = []
+            for k in SENS_TOPK:
+                a, b = set(np.argsort(-base)[:k]), set(order[:k])
+                jac[(n, k)][i] = len(a & b) / len(a | b) if b else 0.0
+    n_def, s_def, k_def = SENS_LIME[1], SENS_SIGMAS[1], SENS_TOPK[1]
+    variants = [('sigma', s, s, k_def, n_def) for s in SENS_SIGMAS]
+    variants += [('top_k', k, s_def, k, n_def) for k in SENS_TOPK]
+    variants += [('lime_samples', n, s_def, k_def, n) for n in SENS_LIME]
+    rows = []
+    for setting, value, s, k, n in variants:
+        comp = {'1-instability': 1 - inst[s], 'jaccard': jac[(n, k)],
+                'xcs_fixed': XCS_W[0] * conf + XCS_W[1] * (1 - inst[s]) + XCS_W[2] * jac[(n, k)]}
+        for score, v in comp.items():
+            r = auroc_ci(correct, v, rng, base=conf)
+            rows.append({'setting': setting, 'value': value, 'score': score, 'auroc': r['auroc'],
+                         'auroc_minus_conf': r['diff'], 'diff_lo': r['diff_lo'], 'diff_hi': r['diff_hi'],
+                         'n': len(X), 'n_errors': int((~correct).sum())})
+    return rows
 
 
 def xcs_sample(y_true, y_pred, n_random, rng):
@@ -732,7 +860,7 @@ def cohens_d(a, b):
     return (a.mean() - b.mean()) / sp if sp > 0 else np.nan
 
 
-xcs_eval_rows, agree_rows, timing_rows, xcs_summary = [], [], [], {}
+xcs_eval_rows, agree_rows, timing_rows, xcs_summary, sens_rows = [], [], [], {}, []
 for name, ds in DATASETS.items():
     print('\nXCS:', name)
     model, explainer = ds['best_model'], SHAP_DATA[name]['explainer']
@@ -741,11 +869,14 @@ for name, ds in DATASETS.items():
         training_data=ds['X_train_nosmote'][:5000], feature_names=ds['features'],
         class_names=ds['class_names'], mode='classification',
         discretize_continuous=True, random_state=RANDOM_STATE)
-    comp = {}
+    trees = build_trust(ds['X_train_nosmote'], ds['y_train_nosmote'], rng)
+    comp, sample_idx = {}, {}
     for split in ('val', 'test'):
         Xp, yp = ds['X_' + split], ds['y_' + split]
         idx, natural = xcs_sample(yp, model.predict(Xp), XCS_N_RANDOM[split], rng)
         df = xcs_components(model, explainer, lime_exp, Xp[idx], rng)
+        df['trust_score'] = trust_score(trees, Xp[idx], df['pred'].values)
+        sample_idx[split] = idx
         df['true'], df['correct'], df['natural'] = yp[idx], df['pred'].values == yp[idx], natural
         df['jaccard'] = df['jaccard'].fillna(0.0)
         df['xcs'] = XCS_W[0] * df['confidence'] + XCS_W[1] * (1 - df['instability']) + XCS_W[2] * df['jaccard']
@@ -761,14 +892,22 @@ for name, ds in DATASETS.items():
         te['xcs_learned'] = lr.predict_proba(sc.transform(te[feats_lr]))[:, 1]
         va['xcs_learned'] = lr.predict_proba(sc.transform(va[feats_lr]))[:, 1]
         learned = dict(zip(feats_lr, lr.coef_[0].round(4)))
+        # Established baseline combined with confidence, for comparison with the learned XCS
+        ct = lambda d: np.column_stack([d['confidence'], np.log1p(d['trust_score'])])
+        sc2 = StandardScaler().fit(ct(va))
+        lr2 = LogisticRegression(class_weight='balanced', max_iter=1000).fit(sc2.transform(ct(va)), va.correct)
+        te['conf_trust_learned'] = lr2.predict_proba(sc2.transform(ct(te)))[:, 1]
+        va['conf_trust_learned'] = lr2.predict_proba(sc2.transform(ct(va)))[:, 1]
     for split, df in comp.items():
         df.to_csv(OUT / 'xcs' / f'xcs_components_{name}_{split}.csv', index=False)
 
     scores = {'confidence': te['confidence'].values, 'margin': te['margin'].values,
+              'neg_entropy': te['neg_entropy'].values, 'trust_score': te['trust_score'].values,
               '1-instability': 1 - te['instability'].values, 'jaccard': te['jaccard'].values,
               'xcs_fixed': te['xcs'].values}
     if 'xcs_learned' in te:
         scores['xcs_learned'] = te['xcs_learned'].values
+        scores['conf_trust_learned'] = te['conf_trust_learned'].values
     corr, nat = te['correct'].values, te['natural'].values
     for s, v in scores.items():
         r = auroc_ci(corr, v, rng, base=scores['confidence'] if s != 'confidence' else None)
@@ -794,6 +933,14 @@ for name, ds in DATASETS.items():
     xcs_summary[name] = {'learned_lr_coefficients_standardised': learned, 'thresholds': thr_rows,
                          'n_val': len(va), 'n_test': len(te), 'test_errors': int((~corr).sum()),
                          'natural_error_rate': float((~corr[nat]).mean())}
+
+    if SENSITIVITY:
+        pick = np.r_[np.where(te['natural'].values)[0][:SENS_N['natural']],
+                     np.where(~te['natural'].values)[0][:SENS_N['errors']]]
+        Xs = ds['X_test'][sample_idx['test'][pick]]
+        for r in xcs_sensitivity(model, explainer, lime_exp, Xs, te['correct'].values[pick], rng):
+            sens_rows.append({'dataset': name, **r})
+        print('  sensitivity: n=%d errors=%d' % (len(pick), int((~te['correct'].values[pick]).sum())))
 
     # SHAP–LIME agreement per predicted class (natural test sample, correct predictions).
     sub = te[te.natural & te.correct]
@@ -822,6 +969,8 @@ for name, ds in DATASETS.items():
 pd.DataFrame(xcs_eval_rows).to_csv(OUT / 'tables' / 'xcs_evaluation.csv', index=False)
 pd.DataFrame(agree_rows).to_csv(OUT / 'tables' / 'shap_lime_agreement.csv', index=False)
 pd.DataFrame(timing_rows).to_csv(OUT / 'tables' / 'xcs_latency.csv', index=False)
+if sens_rows:
+    pd.DataFrame(sens_rows).to_csv(OUT / 'tables' / 'xcs_sensitivity.csv', index=False)
 print('\n', pd.DataFrame(xcs_eval_rows)[['dataset', 'score', 'n_errors', 'auroc', 'auroc_minus_conf', 'aurc_natural']].round(4))
 
 
@@ -830,6 +979,7 @@ summary = {'config': {'max_per_dataset': MAX_PER_DATASET, 'test_size': TEST_SIZE
                       'top_k_features': TOP_K_FEATURES, 'xcs_weights': XCS_W, 'xcs_neighbours': XCS_NEIGHBOURS,
                       'xcs_noise_std': XCS_NOISE_STD, 'lime_samples': LIME_SAMPLES, 'seed': RANDOM_STATE,
                       'smoke_test': SMOKE, 'imbalance_mode': IMBALANCE_MODE,
+                      'split_mode': SPLIT_MODE, 'sensitivity': SENSITIVITY,
                       'versions': {'xgboost': xgb.__version__, 'lightgbm': lgb.__version__,
                                    'shap': shap.__version__, 'numpy': np.__version__}},
            'datasets': {n: {'path': PATHS.get(n), 'cleaning': ds['log'], 'split': ds['split_sizes'],
