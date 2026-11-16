@@ -1,6 +1,6 @@
 # Re-run plan
 
-> **Status: completed on 15 Nov 2026** (Kaggle notebook `omaralraas/xai-ids-corrected-rerun`, version 2, commit `4a56e29`). Results are in [`results/`](../results/README.md). The steps below remain valid for reproducing them.
+> **Status: completed.** Version 2 (15 Nov 2026, commit `4a56e29`) produced the first main results. Version 3 (16 Nov 2026, commit `5a8053e`) re-ran seed 42 with the added baselines and the sensitivity analysis, plus seeds 7 and 2024 and a chronological CSE-CIC-IDS-2018 split, using the notebook built by `revision/build_kaggle_notebook.py`. Results are in [`results/`](../results/README.md). The steps below remain valid for reproducing a single run; section 6 covers the robustness runs.
 
 ## 1. Kaggle setup
 1. Create a new Kaggle notebook (Python). In the right-hand **Settings** panel, turn **Internet on**. GPU is optional: training uses it, but SHAP, LIME and the latency timings run on CPU.
@@ -48,5 +48,21 @@ Look at `xcs_evaluation.csv`, rows `xcs_fixed` and `xcs_learned` vs `confidence`
 - **The CI includes 0, or the difference is negative**: XCS does not improve on confidence for error detection. The paper becomes an honest negative/analysis result ("explanation stability and SHAP–LIME agreement do not add error-detection signal beyond confidence on these benchmarks"). That is still publishable and much safer than the current claims. The smoke test already hints this could happen, but its data is synthetic, so this is unknown until the real run.
 
 ## 5. Optional, if time allows
-- Repeat with `RANDOM_STATE` in {7, 2024} and report mean ± sd.
 - Run the adversarial module (`src/evaluation/adversarial.py`) and keep it in the paper only if real results exist. Otherwise remove it from the paper.
+
+## 6. Robustness runs (done in version 3)
+The script reads these environment variables:
+
+| Variable | Effect |
+|---|---|
+| `XAI_IDS_SEED` | Seed for sampling, splitting, oversampling, training and the XCS samples (default 42). |
+| `XAI_IDS_SPLIT=temporal` | Chronological split within each (file, label) of CSE-CIC-IDS-2018. Only that dataset has timestamps, so the other two are skipped. |
+| `XAI_IDS_SENS=1` | Adds the XCS sensitivity analysis (`tables/xcs_sensitivity.csv`, about 10 extra minutes). |
+| `XAI_IDS_DATASETS` | Comma-separated subset, e.g. `CICIDS2018`. |
+| `XAI_IDS_OUT` | Output folder. |
+
+`py revision/build_kaggle_notebook.py revision/xai_ids_revised.py <commit> runs.ipynb` writes a notebook that runs all four configurations one after another (about 3.8 h on a CPU-only Kaggle session) and zips the outputs. Commit them as in `results/` and run
+
+```
+py revision/analyze_results.py results/revised results/revised/paper --seeds results/seeds/seed7 results/seeds/seed2024 --temporal results/temporal2018
+```

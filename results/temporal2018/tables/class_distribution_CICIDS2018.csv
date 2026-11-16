@@ -1,0 +1,16 @@
+class,count
+Benign,70316
+Infilteration,15164
+DDoS attacks-LOIC-HTTP,10000
+DoS attacks-GoldenEye,6663
+DoS attacks-Slowloris,6033
+DoS attacks-Hulk,5890
+DDOS attack-HOIC,5813
+Bot,5622
+SSH-Bruteforce,3355
+DDOS attack-LOIC-UDP,1730
+Brute Force -Web,550
+Brute Force -XSS,226
+SQL Injection,77
+DoS attacks-SlowHTTPTest,35
+FTP-BruteForce,28

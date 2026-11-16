@@ -19,6 +19,8 @@
     "seed": 42,
     "smoke_test": false,
     "imbalance_mode": "auto",
+    "split_mode": "random",
+    "sensitivity": true,
     "versions": {
       "xgboost": "3.4.1",
       "lightgbm": "4.6.0",
@@ -302,59 +304,59 @@
   "xcs": {
     "CICIDS2017": {
       "learned_lr_coefficients_standardised": {
-        "confidence": 3.8916,
-        "instability": -0.555,
-        "jaccard": 0.4284
+        "confidence": 4.5804,
+        "instability": -0.669,
+        "jaccard": 0.1825
+      },
+      "thresholds": {
+        "fixed_0.3": {
+          "threshold": 0.3,
+          "flag_rate_natural": 0.0013333333333333333,
+          "error_recall": 0.04199475065616798,
+          "flag_precision_natural": 0.5
+        },
+        "val_youden": {
+          "threshold": 0.6144049837714747,
+          "flag_rate_natural": 0.19466666666666665,
+          "error_recall": 0.8057742782152231,
+          "flag_precision_natural": 0.04452054794520548
+        }
+      },
+      "n_val": 1111,
+      "n_test": 1864,
+      "test_errors": 381,
+      "natural_error_rate": 0.011333333333333334
+    },
+    "UNSWNB15": {
+      "learned_lr_coefficients_standardised": {
+        "confidence": 1.3448,
+        "instability": -0.2087,
+        "jaccard": 0.048
       },
       "thresholds": {
         "fixed_0.3": {
           "threshold": 0.3,
           "flag_rate_natural": 0.0006666666666666666,
-          "error_recall": 0.05511811023622047,
-          "flag_precision_natural": 1.0
+          "error_recall": 0.0028169014084507044,
+          "flag_precision_natural": 0.0
         },
         "val_youden": {
-          "threshold": 0.6081802432985234,
-          "flag_rate_natural": 0.19466666666666665,
-          "error_recall": 0.7532808398950132,
-          "flag_precision_natural": 0.030821917808219176
-        }
-      },
-      "n_val": 1113,
-      "n_test": 1869,
-      "test_errors": 381,
-      "natural_error_rate": 0.008
-    },
-    "UNSWNB15": {
-      "learned_lr_coefficients_standardised": {
-        "confidence": 1.3763,
-        "instability": -0.0484,
-        "jaccard": 0.0811
-      },
-      "thresholds": {
-        "fixed_0.3": {
-          "threshold": 0.3,
-          "flag_rate_natural": 0.002,
-          "error_recall": 0.005578800557880056,
-          "flag_precision_natural": 0.6666666666666666
-        },
-        "val_youden": {
-          "threshold": 0.5956224618926084,
-          "flag_rate_natural": 0.3293333333333333,
-          "error_recall": 0.7112970711297071,
-          "flag_precision_natural": 0.45951417004048584
+          "threshold": 0.5903790256242105,
+          "flag_rate_natural": 0.30933333333333335,
+          "error_recall": 0.680281690140845,
+          "flag_precision_natural": 0.45689655172413796
         }
       },
       "n_val": 1200,
       "n_test": 1900,
-      "test_errors": 717,
-      "natural_error_rate": 0.21133333333333335
+      "test_errors": 710,
+      "natural_error_rate": 0.20666666666666667
     },
     "CICIDS2018": {
       "learned_lr_coefficients_standardised": {
-        "confidence": 1.6794,
-        "instability": -0.3812,
-        "jaccard": 0.1307
+        "confidence": 1.6014,
+        "instability": -0.3147,
+        "jaccard": 0.0205
       },
       "thresholds": {
         "fixed_0.3": {
@@ -364,16 +366,16 @@
           "flag_precision_natural": NaN
         },
         "val_youden": {
-          "threshold": 0.6415046465486511,
-          "flag_rate_natural": 0.37666666666666665,
-          "error_recall": 0.8609625668449198,
-          "flag_precision_natural": 0.25663716814159293
+          "threshold": 0.6516266172792677,
+          "flag_rate_natural": 0.43066666666666664,
+          "error_recall": 0.8824531516183987,
+          "flag_precision_natural": 0.25541795665634676
         }
       },
       "n_val": 1200,
       "n_test": 1900,
-      "test_errors": 561,
-      "natural_error_rate": 0.10733333333333334
+      "test_errors": 587,
+      "natural_error_rate": 0.12466666666666666
     }
   }
 }

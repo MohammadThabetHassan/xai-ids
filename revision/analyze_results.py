@@ -1,6 +1,7 @@
 # XAI-IDS — paper tables and figures from a revised-pipeline output folder.
 #
 #   py -3.12 revision/analyze_results.py results/revised [results/revised/paper]
+#       [--seeds results/seeds/seed7 results/seeds/seed2024] [--temporal results/temporal2018]
 #
 # Reads only files written by revision/xai_ids_revised.py and writes the CSV
 # tables and PNG figures the paper uses, so every reported number can be
@@ -16,15 +17,26 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-ROOT = Path(sys.argv[1])
-OUT = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / 'paper'
+ARGS = sys.argv[1:]
+def _opt(flag):
+    if flag not in ARGS:
+        return []
+    i = ARGS.index(flag); vals = []
+    while i + 1 < len(ARGS) and not ARGS[i + 1].startswith('--'):
+        vals.append(Path(ARGS.pop(i + 1)))
+    ARGS.pop(i)
+    return vals
+SEED_DIRS, TEMPORAL = _opt('--seeds'), _opt('--temporal')
+ROOT = Path(ARGS[0])
+OUT = Path(ARGS[1]) if len(ARGS) > 1 else ROOT / 'paper'
 OUT.mkdir(parents=True, exist_ok=True)
 T = ROOT / 'tables'
 SUMMARY = json.loads((ROOT / 'summary.json').read_text(encoding='utf-8'))
 DATASETS = list(SUMMARY['datasets'])
 NICE = {'CICIDS2017': 'CIC-IDS-2017', 'UNSWNB15': 'UNSW-NB15', 'CICIDS2018': 'CSE-CIC-IDS-2018'}
 SCORES = {'confidence': 'Confidence', 'margin': 'Margin', '1-instability': '1 − instability',
-          'jaccard': 'SHAP–LIME Jaccard', 'xcs_fixed': 'XCS (a priori)', 'xcs_learned': 'XCS (learned)'}
+          'jaccard': 'SHAP–LIME Jaccard', 'xcs_fixed': 'XCS (a priori)', 'xcs_learned': 'XCS (learned)',
+          'neg_entropy': 'Negative entropy', 'trust_score': 'Trust score', 'conf_trust_learned': 'Confidence + trust (learned)'}
 COL = {'confidence': '#1f2933', 'xcs_fixed': '#c53030', 'xcs_learned': '#2b6cb0'}
 plt.rcParams.update({'font.family': 'DejaVu Sans', 'font.size': 9})
 
@@ -91,17 +103,20 @@ xe = pd.read_csv(T / 'xcs_evaluation.csv')
 xe['dataset_nice'] = xe['dataset'].map(NICE)
 xe.to_csv(OUT / 'table_xcs.csv', index=False)
 
-fig, axes = plt.subplots(1, len(DATASETS), figsize=(10, 3.1), sharey=True)
-order = ['margin', '1-instability', 'jaccard', 'xcs_fixed', 'xcs_learned']
+order = [s for s in ('margin', 'neg_entropy', 'trust_score', 'conf_trust_learned', '1-instability', 'jaccard',
+                      'xcs_fixed', 'xcs_learned') if s in set(xe['score'])]
+fig, axes = plt.subplots(1, len(DATASETS), figsize=(10.5, 0.42 * len(order) + 1.1), sharey=True)
 for ax, d in zip(np.atleast_1d(axes), DATASETS):
     sub = xe[xe['dataset'] == d].set_index('score')
     y = np.arange(len(order))[::-1]
     diff = sub.loc[order, 'auroc_minus_conf'].values
     lo = sub.loc[order, 'diff_lo'].values; hi = sub.loc[order, 'diff_hi'].values
     ax.axvline(0, color='#9aa5b1', lw=1)
-    ax.errorbar(diff, y, xerr=[diff - lo, hi - diff], fmt='o', color='#1f2933', ms=4, capsize=2, lw=1)
+    for yy, s_, dd, l_, h_ in zip(y, order, diff, lo, hi):
+        ax.errorbar(dd, yy, xerr=[[dd - l_], [h_ - dd]], fmt='o', ms=4, capsize=2, lw=1,
+                    color='#c53030' if s_ in ('1-instability', 'jaccard', 'xcs_fixed', 'xcs_learned') else '#1f2933')
     ax.set_yticks(y); ax.set_yticklabels([SCORES[s] for s in order])
-    ax.set_title(f"{NICE[d]}  (confidence AUROC {sub.loc['confidence', 'auroc']:.3f})", fontsize=9)
+    ax.set_title(f"{NICE[d]} (confidence {sub.loc['confidence', 'auroc']:.3f})", fontsize=9)
     ax.set_xlabel('Δ AUROC vs. confidence (95% CI)')
 fig.tight_layout(); fig.savefig(OUT / 'fig_xcs_delta_auroc.png', dpi=300); plt.close(fig)
 
@@ -179,5 +194,52 @@ for d in DATASETS:
     ax.set_xlabel('Predicted'); ax.set_ylabel('True')
     ax.set_title(f'{NICE[d]} — XGBoost, row-normalised (test n={int(cm.values.sum())})', fontsize=8)
     fig.tight_layout(); fig.savefig(OUT / f'fig_confusion_{d}.png', dpi=300); plt.close(fig)
+
+
+# ── Sensitivity of the XCS terms to their settings ───────────────────────────
+if (T / 'xcs_sensitivity.csv').exists():
+    se = pd.read_csv(T / 'xcs_sensitivity.csv')
+    se['dataset'] = se['dataset'].map(NICE)
+    se.to_csv(OUT / 'table_xcs_sensitivity.csv', index=False)
+
+
+def run_summary(root, label):
+    """Headline numbers of one run: detection and misclassification detection."""
+    mc_ = pd.read_csv(root / 'tables' / 'model_comparison.csv')
+    xe_ = pd.read_csv(root / 'tables' / 'xcs_evaluation.csv')
+    summ = json.loads((root / 'summary.json').read_text(encoding='utf-8'))
+    out = []
+    for d in summ['datasets']:
+        m = mc_[mc_['dataset'] == d].set_index('model'); x = xe_[xe_['dataset'] == d].set_index('score')
+        row = {'run': label, 'dataset': NICE[d], 'seed': summ['config'].get('seed'),
+               'split': summ['config'].get('split_mode', 'random'), 'imbalance_mode': summ['datasets'][d].get('imbalance_mode'),
+               'n_test': int(m['n_test'].iloc[0]), 'best_model': m['f1_macro'].idxmax(), 'best_macro_f1': m['f1_macro'].max(),
+               'xgb_macro_f1': m.loc['XGBoost', 'f1_macro'], 'xgb_accuracy': m.loc['XGBoost', 'accuracy'],
+               'n_errors': int(x['n_errors'].iloc[0]), 'auroc_confidence': x.loc['confidence', 'auroc']}
+        for sc in ('trust_score', 'neg_entropy', 'conf_trust_learned', '1-instability', 'jaccard', 'xcs_fixed', 'xcs_learned'):
+            if sc in x.index:
+                row['delta_' + sc] = x.loc[sc, 'auroc_minus_conf']
+                row['delta_' + sc + '_lo'], row['delta_' + sc + '_hi'] = x.loc[sc, 'diff_lo'], x.loc[sc, 'diff_hi']
+        out.append(row)
+    return out
+
+
+# ── Seeds: run-to-run variation ──────────────────────────────────────────────
+if SEED_DIRS:
+    runs = pd.DataFrame(sum([run_summary(r, r.name) for r in [ROOT, *SEED_DIRS]], []))
+    runs.to_csv(OUT / 'table_seeds_runs.csv', index=False)
+    num = [c for c in runs.columns if c.startswith(('best_macro', 'xgb_', 'auroc_', 'delta_')) and not c.endswith(('_lo', '_hi'))]
+    agg = runs.groupby('dataset', sort=False)[num].agg(['mean', 'std', 'min', 'max'])
+    agg.columns = ['_'.join(c) for c in agg.columns]
+    agg.insert(0, 'n_runs', runs.groupby('dataset', sort=False).size())
+    agg.reset_index().to_csv(OUT / 'table_seeds.csv', index=False)
+
+# ── Temporal split ───────────────────────────────────────────────────────────
+for tdir in TEMPORAL:
+    pd.DataFrame(run_summary(tdir, tdir.name)).to_csv(OUT / 'table_temporal.csv', index=False)
+    tx = pd.read_csv(tdir / 'tables' / 'xcs_evaluation.csv'); tx['dataset'] = tx['dataset'].map(NICE)
+    tx.to_csv(OUT / 'table_temporal_xcs.csv', index=False)
+    tm = pd.read_csv(tdir / 'tables' / 'model_comparison.csv'); tm['dataset'] = tm['dataset'].map(NICE)
+    tm.to_csv(OUT / 'table_temporal_detection.csv', index=False)
 
 print('wrote', len(list(OUT.glob('*'))), 'files to', OUT)

@@ -1,0 +1,137 @@
+device: cpu | OUT: /kaggle/working/xai_ids_v3/seed7 | seed: 7 | split: random
+
+Loading CICIDS2017
+  8 parquet files
+   sampled Benign-Monday-no-metadata.parquet : 50000 | labels: {'Benign': 458831}
+   sampled Botnet-Friday-no-metadata.parquet : 26437 | labels: {'Benign': 174601, 'Bot': 1437}
+   sampled Bruteforce-Tuesday-no-metadata.parquet : 25816 | labels: {'Benign': 380564, 'FTP-Patator': 5931, 'SSH-Patator': 3219}
+   sampled DDoS-Friday-no-metadata.parquet : 50000 | labels: {'Benign': 93250, 'DDoS': 128014}
+   sampled DoS-Wednesday-no-metadata.parquet : 35623 | labels: {'Benign': 391235, 'DoS GoldenEye': 10286, 'DoS Hulk': 172846, 'DoS Slowhttptest': 5228, 'DoS slowloris': 5385, 'Heartbleed': 11}
+   sampled Infiltration-Thursday-no-metadata.parquet : 25036 | labels: {'Benign': 207594, 'Infiltration': 36}
+   sampled Portscan-Friday-no-metadata.parquet : 26956 | labels: {'Benign': 117566, 'PortScan': 1956}
+   sampled WebAttacks-Thursday-no-metadata.parquet : 14643 | labels: {'Benign': 153677, 'Web Attack � Brute Force': 1470, 'Web Attack � Sql Injection': 21, 'Web Attack � XSS': 652}
+  cleaning log: {'raw_rows': 254511, 'after_nan_inf': 254511, 'after_dedup': 253103, 'label_conflict_rows': 36, 'rare_classes_dropped': {}, 'final_rows': 200000}
+  classes: 15 ['Benign', 'Bot', 'DDoS', 'DoS GoldenEye', 'DoS Hulk', 'DoS Slowhttptest', 'DoS slowloris', 'FTP-Patator', 'Heartbleed', 'Infiltration', 'PortScan', 'SSH-Patator', 'Web Attack � Brute Force', 'Web Attack � Sql Injection', 'Web Attack � XSS']
+
+Loading UNSWNB15
+  2 parquet files
+   sampled UNSW_NB15_testing-set.parquet : 55461 | labels: {'Analysis': 677, 'Backdoor': 583, 'DoS': 4089, 'Exploits': 11132, 'Fuzzers': 6062, 'Generic': 18871, 'Normal': 37000, 'Reconnaissance': 3496, 'Shellcode': 378, 'Worms': 44}
+   sampled UNSW_NB15_training-set.parquet : 85764 | labels: {'Analysis': 2000, 'Backdoor': 1746, 'DoS': 12264, 'Exploits': 33393, 'Fuzzers': 18184, 'Generic': 40000, 'Normal': 56000, 'Reconnaissance': 10491, 'Shellcode': 1133, 'Worms': 130}
+  cleaning log: {'raw_rows': 141225, 'after_nan_inf': 141225, 'after_dedup': 74062, 'label_conflict_rows': 3627, 'rare_classes_dropped': {}, 'final_rows': 70435}
+  classes: 10 ['Analysis', 'Backdoor', 'DoS', 'Exploits', 'Fuzzers', 'Generic', 'Normal', 'Reconnaissance', 'Shellcode', 'Worms']
+
+Loading CICIDS2018
+  10 CSV files
+   sampled 02-14-2018.csv : 19998 | labels: {'Benign': 667626, 'FTP-BruteForce': 193360, 'SSH-Bruteforce': 187589}
+   sampled 02-15-2018.csv : 19998 | labels: {'Benign': 996077, 'DoS attacks-GoldenEye': 41508, 'DoS attacks-Slowloris': 10990}
+   sampled 02-16-2018.csv : 19998 | labels: {'Benign': 446772, 'DoS attacks-Hulk': 461912, 'DoS attacks-SlowHTTPTest': 139890}
+   sampled 02-20-2018.csv : 20000 | labels: {'Benign': 7372557, 'DDoS attacks-LOIC-HTTP': 576191}
+   sampled 02-21-2018.csv : 15062 | labels: {'Benign': 360833, 'DDOS attack-HOIC': 686012, 'DDOS attack-LOIC-UDP': 1730}
+   sampled 02-22-2018.csv : 5362 | labels: {'Benign': 1048213, 'Brute Force -Web': 249, 'Brute Force -XSS': 79, 'SQL Injection': 34}
+   sampled 02-23-2018.csv : 5566 | labels: {'Benign': 1048009, 'Brute Force -Web': 362, 'Brute Force -XSS': 151, 'SQL Injection': 53}
+   sampled 02-28-2018.csv : 20000 | labels: {'Benign': 544200, 'Infilteration': 68871}
+   sampled 03-01-2018.csv : 20000 | labels: {'Benign': 238037, 'Infilteration': 93063}
+   sampled 03-02-2018.csv : 20000 | labels: {'Benign': 762384, 'Bot': 286191}
+  cleaning log: {'raw_rows': 165984, 'after_nan_inf': 165356, 'after_dedup': 133504, 'label_conflict_rows': 1949, 'rare_classes_dropped': {}, 'final_rows': 131555}
+  classes: 15 ['Benign', 'Bot', 'Brute Force -Web', 'Brute Force -XSS', 'DDOS attack-HOIC', 'DDOS attack-LOIC-UDP', 'DDoS attacks-LOIC-HTTP', 'DoS attacks-GoldenEye', 'DoS attacks-Hulk', 'DoS attacks-SlowHTTPTest', 'DoS attacks-Slowloris', 'FTP-BruteForce', 'Infilteration', 'SQL Injection', 'SSH-Bruteforce']
+
+Preparing CICIDS2017
+  split: {'train': 128000, 'train_after_smote': 136580, 'val': 32000, 'test': 40000} | features: ['Flow Duration', 'Fwd IAT Total', 'Flow IAT Mean', 'Packet Length Max', 'Fwd Packets Length Total', 'Avg Packet Size', 'Avg Bwd Segment Size', 'Fwd IAT Std', 'Fwd IAT Max', 'Packet Length Mean', 'Bwd IAT Mean', 'Flow IAT Std', 'Packet Length Std', 'Bwd Packet Length Std', 'Flow IAT Max', 'Bwd Packet Length Max', 'Bwd IAT Max', 'PSH Flag Count', 'Idle Min', 'Protocol']
+
+Preparing UNSWNB15
+  split: {'train': 45078, 'train_after_smote': 51550, 'val': 11270, 'test': 14087} | features: ['dbytes', 'sbytes', 'dmean', 'smean', 'ct_src_dport_ltm', 'dload', 'sload', 'tcprtt', 'ct_flw_http_mthd', 'ackdat', 'synack', 'dloss', 'sloss', 'sjit', 'djit', 'dur', 'spkts', 'sinpkt', 'dinpkt', 'rate']
+
+Preparing CICIDS2018
+  split: {'train': 84195, 'train_after_smote': 101342, 'val': 21049, 'test': 26311} | features: ['Init Fwd Win Byts', 'Fwd Seg Size Min', 'Fwd Act Data Pkts', 'Fwd Pkt Len Max', 'Flow Duration', 'Flow IAT Max', 'Fwd IAT Mean', 'Fwd Pkt Len Mean', 'Flow IAT Std', 'Subflow Fwd Byts', 'Fwd IAT Tot', 'Fwd Header Len', 'Fwd IAT Max', 'ECE Flag Cnt', 'Bwd IAT Min', 'Bwd IAT Mean', 'Bwd IAT Std', 'Bwd IAT Tot', 'Bwd IAT Max', 'Idle Max']
+
+Training on CICIDS2017
+  imbalance=none     val macroF1=0.8721 acc=0.9911
+  imbalance=smote    val macroF1=0.8673 acc=0.9907
+  imbalance=weights  val macroF1=0.7426 acc=0.9469
+  imbalance=both     val macroF1=0.7374 acc=0.9468
+  selected imbalance mode: none
+  XGBoost       acc=0.9907 macroF1=0.8640 (35s)
+  RandomForest  acc=0.9918 macroF1=0.8571 (29s)
+  LightGBM      acc=0.9816 macroF1=0.6943 (5s)
+  Ensemble      acc=0.9912 macroF1=0.8533 (60s)
+
+Training on UNSWNB15
+  imbalance=none     val macroF1=0.6791 acc=0.8130
+  imbalance=smote    val macroF1=0.6882 acc=0.8096
+  imbalance=weights  val macroF1=0.6959 acc=0.7969
+  imbalance=both     val macroF1=0.6748 acc=0.7918
+  selected imbalance mode: weights
+  XGBoost       acc=0.7973 macroF1=0.6817 (20s)
+  RandomForest  acc=0.7989 macroF1=0.6719 (17s)
+  LightGBM      acc=0.7984 macroF1=0.6926 (12s)
+  Ensemble      acc=0.8022 macroF1=0.6924 (46s)
+
+Training on CICIDS2018
+  imbalance=none     val macroF1=0.8465 acc=0.8911
+  imbalance=smote    val macroF1=0.8232 acc=0.8888
+  imbalance=weights  val macroF1=0.8176 acc=0.7681
+  imbalance=both     val macroF1=0.8126 acc=0.7693
+  selected imbalance mode: none
+  XGBoost       acc=0.8910 macroF1=0.8356 (21s)
+  RandomForest  acc=0.8889 macroF1=0.8032 (22s)
+  LightGBM      acc=0.8871 macroF1=0.7822 (5s)
+  Ensemble      acc=0.8917 macroF1=0.8091 (42s)
+
+        dataset         model  accuracy  f1_weighted  f1_macro     ece
+0   CICIDS2017       XGBoost    0.9906       0.9901    0.8640  0.0014
+1   CICIDS2017  RandomForest    0.9918       0.9912    0.8571  0.0038
+2   CICIDS2017      LightGBM    0.9816       0.9831    0.6943  0.0306
+3   CICIDS2017      Ensemble    0.9912       0.9906    0.8533  0.0174
+4     UNSWNB15       XGBoost    0.7973       0.8028    0.6817  0.0388
+5     UNSWNB15  RandomForest    0.7989       0.8037    0.6719  0.0140
+6     UNSWNB15      LightGBM    0.7984       0.8035    0.6926  0.0383
+7     UNSWNB15      Ensemble    0.8022       0.8070    0.6924  0.0150
+8   CICIDS2018       XGBoost    0.8910       0.8663    0.8356  0.0069
+9   CICIDS2018  RandomForest    0.8889       0.8644    0.8032  0.0065
+10  CICIDS2018      LightGBM    0.8871       0.8526    0.7822  0.0122
+11  CICIDS2018      Ensemble    0.8917       0.8637    0.8091  0.0095
+
+XCS: CICIDS2017
+  val: n=1081 natural=800 errors=284
+  test: n=1863 natural=1500 errors=374
+
+XCS: UNSWNB15
+  val: n=1200 natural=800 errors=589
+  test: n=1900 natural=1500 errors=710
+
+XCS: CICIDS2018
+  val: n=1200 natural=800 errors=497
+  test: n=1900 natural=1500 errors=575
+
+        dataset               score  ...  auroc_minus_conf  aurc_natural
+0   CICIDS2017          confidence  ...               NaN        0.0002
+1   CICIDS2017              margin  ...           -0.0003        0.0002
+2   CICIDS2017         neg_entropy  ...            0.0001        0.0002
+3   CICIDS2017         trust_score  ...           -0.1149        0.0031
+4   CICIDS2017       1-instability  ...           -0.4243        0.0082
+5   CICIDS2017             jaccard  ...           -0.5226        0.0163
+6   CICIDS2017           xcs_fixed  ...           -0.1355        0.0023
+7   CICIDS2017         xcs_learned  ...           -0.0194        0.0002
+8   CICIDS2017  conf_trust_learned  ...           -0.0002        0.0002
+9     UNSWNB15          confidence  ...               NaN        0.0555
+10    UNSWNB15              margin  ...           -0.0040        0.0563
+11    UNSWNB15         neg_entropy  ...           -0.0035        0.0565
+12    UNSWNB15         trust_score  ...           -0.0885        0.0810
+13    UNSWNB15       1-instability  ...           -0.1952        0.1245
+14    UNSWNB15             jaccard  ...           -0.2900        0.1628
+15    UNSWNB15           xcs_fixed  ...           -0.0546        0.0721
+16    UNSWNB15         xcs_learned  ...           -0.0043        0.0570
+17    UNSWNB15  conf_trust_learned  ...           -0.0030        0.0573
+18  CICIDS2018          confidence  ...               NaN        0.0262
+19  CICIDS2018              margin  ...           -0.0003        0.0262
+20  CICIDS2018         neg_entropy  ...            0.0002        0.0263
+21  CICIDS2018         trust_score  ...           -0.0926        0.0450
+22  CICIDS2018       1-instability  ...           -0.1367        0.0492
+23  CICIDS2018             jaccard  ...           -0.4237        0.1341
+24  CICIDS2018           xcs_fixed  ...           -0.0629        0.0359
+25  CICIDS2018         xcs_learned  ...           -0.0096        0.0300
+26  CICIDS2018  conf_trust_learned  ...           -0.0007        0.0273
+
+[27 rows x 6 columns]
+
+Done. Outputs in /kaggle/working/xai_ids_v3/seed7

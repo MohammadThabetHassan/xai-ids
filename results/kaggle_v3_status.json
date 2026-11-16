@@ -1,0 +1,32 @@
+{
+ "seed42": {
+  "returncode": 0,
+  "minutes": 77.5,
+  "env": {
+   "XAI_IDS_SEED": "42",
+   "XAI_IDS_SENS": "1"
+  }
+ },
+ "temporal2018": {
+  "returncode": 0,
+  "minutes": 22.8,
+  "env": {
+   "XAI_IDS_SEED": "42",
+   "XAI_IDS_SPLIT": "temporal"
+  }
+ },
+ "seed7": {
+  "returncode": 0,
+  "minutes": 61.9,
+  "env": {
+   "XAI_IDS_SEED": "7"
+  }
+ },
+ "seed2024": {
+  "returncode": 0,
+  "minutes": 64.3,
+  "env": {
+   "XAI_IDS_SEED": "2024"
+  }
+ }
+}

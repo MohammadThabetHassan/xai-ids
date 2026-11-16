@@ -1,0 +1,21 @@
+feature,mean_abs_shap,family
+Fwd Seg Size Min,0.8784168,size/volume
+Init Fwd Win Byts,0.8687357,tcp flags/window
+Flow Duration,0.62457895,timing
+Fwd Act Data Pkts,0.3242598,count
+Fwd Pkt Len Max,0.29150078,size/volume
+Bwd Pkt Len Max,0.25917095,size/volume
+Fwd IAT Tot,0.24766433,timing
+Fwd Header Len,0.22087817,size/volume
+Fwd Pkt Len Mean,0.20506799,size/volume
+Flow IAT Std,0.16937192,timing
+Fwd IAT Std,0.1493672,timing
+Subflow Fwd Byts,0.12922838,size/volume
+ECE Flag Cnt,0.11277076,tcp flags/window
+Fwd Pkt Len Std,0.10708104,size/volume
+Subflow Fwd Pkts,0.080248944,count
+Bwd IAT Min,0.058547758,timing
+Bwd IAT Mean,0.056051835,timing
+Idle Mean,0.04152471,timing
+Bwd IAT Max,0.04030755,timing
+Bwd IAT Std,0.024684224,timing

@@ -1,0 +1,16 @@
+class,count
+Benign,147054
+DDoS,19758
+DoS GoldenEye,6586
+DoS Hulk,6584
+FTP-Patator,4687
+DoS slowloris,4256
+DoS Slowhttptest,4132
+SSH-Patator,2544
+PortScan,1535
+Web Attack � Brute Force,1162
+Bot,1133
+Web Attack � XSS,515
+Infiltration,28
+Web Attack � Sql Injection,17
+Heartbleed,9

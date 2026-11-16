@@ -1,0 +1,379 @@
+{
+  "config": {
+    "max_per_dataset": {
+      "CICIDS2017": 200000,
+      "UNSWNB15": 145000,
+      "CICIDS2018": 200000
+    },
+    "test_size": 0.2,
+    "val_size": 0.2,
+    "top_k_features": 20,
+    "xcs_weights": [
+      0.4,
+      0.3,
+      0.3
+    ],
+    "xcs_neighbours": 5,
+    "xcs_noise_std": 0.05,
+    "lime_samples": 1000,
+    "seed": 7,
+    "smoke_test": false,
+    "imbalance_mode": "auto",
+    "split_mode": "random",
+    "sensitivity": false,
+    "versions": {
+      "xgboost": "3.4.1",
+      "lightgbm": "4.6.0",
+      "shap": "0.54.1",
+      "numpy": "2.1.3"
+    }
+  },
+  "datasets": {
+    "CICIDS2017": {
+      "path": "/kaggle/input/datasets/dhoogla/cicids2017",
+      "cleaning": {
+        "raw_rows": 254511,
+        "after_nan_inf": 254511,
+        "after_dedup": 253103,
+        "label_conflict_rows": 36,
+        "zero_var_dropped": [
+          "Bwd Avg Bulk Rate",
+          "Bwd Avg Bytes/Bulk",
+          "Bwd Avg Packets/Bulk",
+          "Bwd PSH Flags",
+          "Bwd URG Flags",
+          "Fwd Avg Bulk Rate",
+          "Fwd Avg Bytes/Bulk",
+          "Fwd Avg Packets/Bulk"
+        ],
+        "rare_classes_dropped": {},
+        "final_rows": 200000
+      },
+      "split": {
+        "train": 128000,
+        "train_after_smote": 136580,
+        "val": 32000,
+        "test": 40000
+      },
+      "smote": {
+        "PortScan": [
+          982,
+          1628
+        ],
+        "Bot": [
+          725,
+          1628
+        ],
+        "Web Attack \ufffd Brute Force": [
+          744,
+          1628
+        ],
+        "Web Attack \ufffd XSS": [
+          330,
+          1628
+        ],
+        "Infiltration": [
+          18,
+          1628
+        ],
+        "Web Attack \ufffd Sql Injection": [
+          11,
+          1628
+        ],
+        "Heartbleed": [
+          6,
+          1628
+        ]
+      },
+      "imbalance_mode": "none",
+      "classes": [
+        "Benign",
+        "Bot",
+        "DDoS",
+        "DoS GoldenEye",
+        "DoS Hulk",
+        "DoS Slowhttptest",
+        "DoS slowloris",
+        "FTP-Patator",
+        "Heartbleed",
+        "Infiltration",
+        "PortScan",
+        "SSH-Patator",
+        "Web Attack \ufffd Brute Force",
+        "Web Attack \ufffd Sql Injection",
+        "Web Attack \ufffd XSS"
+      ],
+      "features": [
+        "Flow Duration",
+        "Fwd IAT Total",
+        "Flow IAT Mean",
+        "Packet Length Max",
+        "Fwd Packets Length Total",
+        "Avg Packet Size",
+        "Avg Bwd Segment Size",
+        "Fwd IAT Std",
+        "Fwd IAT Max",
+        "Packet Length Mean",
+        "Bwd IAT Mean",
+        "Flow IAT Std",
+        "Packet Length Std",
+        "Bwd Packet Length Std",
+        "Flow IAT Max",
+        "Bwd Packet Length Max",
+        "Bwd IAT Max",
+        "PSH Flag Count",
+        "Idle Min",
+        "Protocol"
+      ]
+    },
+    "UNSWNB15": {
+      "path": "/kaggle/input/datasets/dhoogla/unswnb15",
+      "cleaning": {
+        "raw_rows": 141225,
+        "after_nan_inf": 141225,
+        "after_dedup": 74062,
+        "label_conflict_rows": 3627,
+        "zero_var_dropped": [],
+        "rare_classes_dropped": {},
+        "final_rows": 70435
+      },
+      "split": {
+        "train": 45078,
+        "train_after_smote": 51550,
+        "val": 11270,
+        "test": 14087
+      },
+      "smote": {
+        "Generic": [
+          1425,
+          1849
+        ],
+        "Shellcode": [
+          742,
+          1849
+        ],
+        "Worms": [
+          100,
+          1849
+        ],
+        "Backdoor": [
+          224,
+          1849
+        ],
+        "Analysis": [
+          282,
+          1849
+        ]
+      },
+      "imbalance_mode": "weights",
+      "classes": [
+        "Analysis",
+        "Backdoor",
+        "DoS",
+        "Exploits",
+        "Fuzzers",
+        "Generic",
+        "Normal",
+        "Reconnaissance",
+        "Shellcode",
+        "Worms"
+      ],
+      "features": [
+        "dbytes",
+        "sbytes",
+        "dmean",
+        "smean",
+        "ct_src_dport_ltm",
+        "dload",
+        "sload",
+        "tcprtt",
+        "ct_flw_http_mthd",
+        "ackdat",
+        "synack",
+        "dloss",
+        "sloss",
+        "sjit",
+        "djit",
+        "dur",
+        "spkts",
+        "sinpkt",
+        "dinpkt",
+        "rate"
+      ]
+    },
+    "CICIDS2018": {
+      "path": "/kaggle/input/datasets/solarmainframe/ids-intrusion-csv",
+      "cleaning": {
+        "raw_rows": 165984,
+        "after_nan_inf": 165356,
+        "after_dedup": 133504,
+        "label_conflict_rows": 1949,
+        "zero_var_dropped": [
+          "Bwd Blk Rate Avg",
+          "Bwd Byts/b Avg",
+          "Bwd PSH Flags",
+          "Bwd Pkts/b Avg",
+          "Bwd URG Flags",
+          "Fwd Blk Rate Avg",
+          "Fwd Byts/b Avg",
+          "Fwd Pkts/b Avg"
+        ],
+        "rare_classes_dropped": {},
+        "final_rows": 131555
+      },
+      "split": {
+        "train": 84195,
+        "train_after_smote": 101342,
+        "val": 21049,
+        "test": 26311
+      },
+      "smote": {
+        "SSH-Bruteforce": [
+          2158,
+          3000
+        ],
+        "DDOS attack-LOIC-UDP": [
+          1107,
+          3000
+        ],
+        "SQL Injection": [
+          50,
+          3000
+        ],
+        "Brute Force -Web": [
+          351,
+          3000
+        ],
+        "DoS attacks-SlowHTTPTest": [
+          22,
+          3000
+        ],
+        "Brute Force -XSS": [
+          146,
+          3000
+        ],
+        "FTP-BruteForce": [
+          19,
+          3000
+        ]
+      },
+      "imbalance_mode": "none",
+      "classes": [
+        "Benign",
+        "Bot",
+        "Brute Force -Web",
+        "Brute Force -XSS",
+        "DDOS attack-HOIC",
+        "DDOS attack-LOIC-UDP",
+        "DDoS attacks-LOIC-HTTP",
+        "DoS attacks-GoldenEye",
+        "DoS attacks-Hulk",
+        "DoS attacks-SlowHTTPTest",
+        "DoS attacks-Slowloris",
+        "FTP-BruteForce",
+        "Infilteration",
+        "SQL Injection",
+        "SSH-Bruteforce"
+      ],
+      "features": [
+        "Init Fwd Win Byts",
+        "Fwd Seg Size Min",
+        "Fwd Act Data Pkts",
+        "Fwd Pkt Len Max",
+        "Flow Duration",
+        "Flow IAT Max",
+        "Fwd IAT Mean",
+        "Fwd Pkt Len Mean",
+        "Flow IAT Std",
+        "Subflow Fwd Byts",
+        "Fwd IAT Tot",
+        "Fwd Header Len",
+        "Fwd IAT Max",
+        "ECE Flag Cnt",
+        "Bwd IAT Min",
+        "Bwd IAT Mean",
+        "Bwd IAT Std",
+        "Bwd IAT Tot",
+        "Bwd IAT Max",
+        "Idle Max"
+      ]
+    }
+  },
+  "xcs": {
+    "CICIDS2017": {
+      "learned_lr_coefficients_standardised": {
+        "confidence": 4.9277,
+        "instability": -0.9182,
+        "jaccard": -0.1824
+      },
+      "thresholds": {
+        "fixed_0.3": {
+          "threshold": 0.3,
+          "flag_rate_natural": 0.0,
+          "error_recall": 0.0,
+          "flag_precision_natural": NaN
+        },
+        "val_youden": {
+          "threshold": 0.6043619294220343,
+          "flag_rate_natural": 0.21733333333333332,
+          "error_recall": 0.7914438502673797,
+          "flag_precision_natural": 0.018404907975460124
+        }
+      },
+      "n_val": 1081,
+      "n_test": 1863,
+      "test_errors": 374,
+      "natural_error_rate": 0.007333333333333333
+    },
+    "UNSWNB15": {
+      "learned_lr_coefficients_standardised": {
+        "confidence": 1.5399,
+        "instability": -0.1286,
+        "jaccard": 0.1202
+      },
+      "thresholds": {
+        "fixed_0.3": {
+          "threshold": 0.3,
+          "flag_rate_natural": 0.0026666666666666666,
+          "error_recall": 0.009859154929577466,
+          "flag_precision_natural": 0.75
+        },
+        "val_youden": {
+          "threshold": 0.6242136884829155,
+          "flag_rate_natural": 0.41,
+          "error_recall": 0.7915492957746478,
+          "flag_precision_natural": 0.4016260162601626
+        }
+      },
+      "n_val": 1200,
+      "n_test": 1900,
+      "test_errors": 710,
+      "natural_error_rate": 0.20666666666666667
+    },
+    "CICIDS2018": {
+      "learned_lr_coefficients_standardised": {
+        "confidence": 1.4486,
+        "instability": -0.4121,
+        "jaccard": -0.2993
+      },
+      "thresholds": {
+        "fixed_0.3": {
+          "threshold": 0.3,
+          "flag_rate_natural": 0.0,
+          "error_recall": 0.0,
+          "flag_precision_natural": NaN
+        },
+        "val_youden": {
+          "threshold": 0.6475515352872978,
+          "flag_rate_natural": 0.396,
+          "error_recall": 0.7878260869565218,
+          "flag_precision_natural": 0.23905723905723905
+        }
+      },
+      "n_val": 1200,
+      "n_test": 1900,
+      "test_errors": 575,
+      "natural_error_rate": 0.11666666666666667
+    }
+  }
+}
